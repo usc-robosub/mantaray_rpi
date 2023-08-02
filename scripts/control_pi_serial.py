@@ -2,12 +2,12 @@
 
 import time
 import rospy
-import busio
 import math
-import board
-from adafruit_pcas9685 import PCA9685
-from mantaray_rpi.msg import FloatStamped
-import pandas as pd
+# import busio
+# import board
+# from adafruit_pcas9685 import PCA9685
+# import pandas as pd
+# from mantaray_rpi.msg import FloatStamped
 import time
 
 REVERSED_THRUSTERS = [0, 1, 2, 3, 4, 5]
@@ -27,6 +27,7 @@ running = True
 updatingThrusters = True
 PCA_ADDRESSES = [0x40, 0x41]
 PCAs = [None, None]
+pubs = [None] * NUM_THRUSTERS
 
 thrusters = [None] * NUM_THRUSTERS
 voltage = 19 # Was around 20 the last time I checked
@@ -49,17 +50,17 @@ def microseconds_to_int16(time, freq):
     return time*freq*65536/1000000
 
 class Thruster: # Agnostic to the direction of thrust. Will need to keep track of its own thruster num
-    def __init__(self, thruster_num, channel, pca_num):
+    def __init__(self, thruster_num, channel, pca_num, output_type="real"):
         self.thruster_num = thruster_num
         self.channel_num = channel
         self.pca_num = pca_num
         self.accel = DEFAULT_ACCEL
-        self.PCA9685 = None
         self.targetThrust = 0
         self.currentThrust = 0
         self.stopping = False
         self.running = True
         self.initialized = False
+        self.output_type = output_type
 
         self.data_file = "20 V/force_pwm.csv"
         self.iodata = pd.read_csv(self.data_file)
@@ -139,8 +140,11 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
             else:
                 return
             # print("Thruster"+str(self.thruster_num)+" pca"+str(self.pca_num)+" channel"+str(self.channel_num)+" freq"+str(PWM_FREQ)+" currentThrust"+str(self.currentThrust))
-            self.update_pwm()
-            PCAs[self.pca_num].channels[self.channel_num].duty_cycle = round(microseconds_to_int16(self.pwm, PCAs[self.pca_num].frequency))            
+            if self.output_type == "real":            
+                self.update_pwm()
+                PCAs[self.pca_num].channels[self.channel_num].duty_cycle = round(microseconds_to_int16(self.pwm, PCAs[self.pca_num].frequency))            
+            elif self.output_type == "simulation":
+                pubs[self.thruster_num].publish(FloatStamped(self.currentThrust * 30))
         elif not self.initialized:
             PCAs[self.pca_num].channels[self.channel_num].duty_cycle = round(microseconds_to_int16(self.pwm, PCAs[self.pca_num].frequency))            
             self.initialized=True
@@ -154,7 +158,14 @@ def initPcas(addresses = [0x40], freq = PWM_FREQ, debug = False):
     if (debug):
         print("pcas have been initialized")
 
-def initThrusters(debug = False):
+def initPubs(debug = False):
+    global pubs
+    for i in range(len(pubs)):
+        pubs[i] = rospy.Publisher("/mantaray/thruster_"+i+"/input", FloatStamped, queue_size = 10)
+    if (debug):
+        print("Sim publishers have been initialized")
+
+def initThrusters(output_type = "real", debug = False):
     '''
     Thrusters mapping:
     Thruster 0: pca 0, channel 2
@@ -167,31 +178,38 @@ def initThrusters(debug = False):
     Thruster 7: pca 1, channel 4
     '''
     global thrusters
-    thrusters[0] = Thruster(0, 2, 0)
-    thrusters[1] = Thruster(1, 1, 0)
-    thrusters[2] = Thruster(2, 4, 0)
-    thrusters[3] = Thruster(3, 3, 0)
-    thrusters[4] = Thruster(4, 3, 1)
-    thrusters[5] = Thruster(5, 1, 1)
-    thrusters[6] = Thruster(6, 2, 1)
-    thrusters[7] = Thruster(7, 4, 1)
+    if (output_type == "simulation"):
+        for i in range(NUM_THRUSTERS):
+            if (i < 4):
+                thrusters[i] = Thruster(i, i)
+            else:
+                thrusters[i] = Thruster(i, i-4, 1)
+    elif (output_type == "real"):
+        thrusters[0] = Thruster(0, 2, 0)
+        thrusters[1] = Thruster(1, 1, 0)
+        thrusters[2] = Thruster(2, 4, 0)
+        thrusters[3] = Thruster(3, 3, 0)
+        thrusters[4] = Thruster(4, 3, 1)
+        thrusters[5] = Thruster(5, 1, 1)
+        thrusters[6] = Thruster(6, 2, 1)
+        thrusters[7] = Thruster(7, 4, 1)
 
-    for i in range(NUM_THRUSTERS):
-        rospy.Subscriber("/mantaray/thruster"+ str(i) + "/input", FloatStamped, thrusters[0].thrustCallback)
-    for i in range(NUM_THRUSTERS):
-        init_thrusts = [k/1000 for k in range(-100, 100, 20)]
-        stopping_thrusts = [k/1000 for k in range(100, 0, -20)]
-        for j in init_thrusts:
-            thrusters[i].setTargetThrust(j)
-            thrusters[i].update()
-            time.sleep(0.02)
-        time.sleep(0.5)
-        for j in stopping_thrusts:
-            thrusters[i].setTargetThrust(j)
-            thrusters[i].update()
-            time.sleep(0.02)
-        if debug:
-            print("Thruster " + str(i) + " has been initialized")
+        for i in range(NUM_THRUSTERS):
+            rospy.Subscriber("/mantaray/thrusters/"+ str(i) + "/input", FloatStamped, thrusters[0].thrustCallback)
+        for i in range(NUM_THRUSTERS):
+            init_thrusts = [k/1000 for k in range(-100, 100, 20)]
+            stopping_thrusts = [k/1000 for k in range(100, 0, -20)]
+            for j in init_thrusts:
+                thrusters[i].setTargetThrust(j)
+                thrusters[i].update()
+                time.sleep(0.02)
+            time.sleep(0.5)
+            for j in stopping_thrusts:
+                thrusters[i].setTargetThrust(j)
+                thrusters[i].update()
+                time.sleep(0.02)
+            if debug:
+                print("Thruster " + str(i) + " has been initialized")
     if debug:
         print("Thrusters have been initialized")
 
@@ -214,6 +232,21 @@ def initThrusters(debug = False):
 #         time.sleep(5)
 
 if __name__ == "__main__":
-    initPcas(addresses=[0x40, 0x41],debug = True)
-    initThrusters(debug = True)
-    rospy.spin() # can add a whlie loop for doing stuff later
+    rospy.init_node("thruster_controller", anonymous=False)
+    output_type = rospy.get_param("/output_type", default="real")
+    if (output_type == "real"):
+        import busio
+        import board
+        from adafruit_pcas9685 import PCA9685
+        import pandas as pd
+        from mantaray_rpi.msg import FloatStamped
+        initPcas(addresses=[0x40, 0x41], debug = True)
+    elif (output_type == "simulation"):
+        from uuv_gazebo_ros_plugins_msgs.msg import FloatStamped
+        initPubs(debug=True)
+        
+    initThrusters(output_type, debug = True)
+    while not rospy.is_shutdown():
+        if(updatingThrusters):
+            for i in range(NUM_THRUSTERS):
+                thrusters[i].update()
