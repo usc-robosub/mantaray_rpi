@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import rospy
 import time
@@ -20,11 +20,11 @@ sub_control_state = fsm()
 def thruster_publisher(name, fsm):
     
     rospy.init_node('mantaray_control', anonymous=True) 
-    sub_control_state.set_state(1)
+    fsm.set_state(1)
 
     pub = []
 
-    sub_control_state.current_state.set_rot_target(math.radians(0),math.radians(0),math.radians(0))
+    fsm.current_state.set_rot_target(math.radians(0),math.radians(0),math.radians(0))
 
     for i in range(THRUSTER_COUNT):
         pub.append(rospy.Publisher('/' + name + '/thrusters/'+str(i)+'/input', FloatStamped, queue_size=10))
@@ -32,12 +32,12 @@ def thruster_publisher(name, fsm):
 
     time_last = time.time()
     while not rospy.is_shutdown():
-        sub_control_state.run(100)
+        fsm.run(100)
         for i in range(THRUSTER_COUNT):
             fs = FloatStamped()
             fs.header.frame_id = 'world'
             fs.header.stamp = rospy.Time.now()
-            fs.data = sub_control_state.get_state().get_thrust_list()[i]
+            fs.data = fsm.get_state().get_thrust_list()[i]
             pub[i].publish(fs)
 
         rate = rospy.Rate(10) # 10hz
@@ -55,4 +55,4 @@ if __name__ == "__main__":
     print("initializing thrusters...")
     time.sleep(3)
     print("thrusters initialized")
-    thruster_publisher(SUB_NAME, fsm)
+    thruster_publisher(SUB_NAME, sub_control_state)
