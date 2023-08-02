@@ -23,7 +23,6 @@ serialib serial;
 void serial_imu_callback() {
     // Process each received byte
     while(true) {
-        ros::Rate loop_rate(100);
         while (serial.available() > 0) {
             try
             {
@@ -37,7 +36,6 @@ void serial_imu_callback() {
             }
             
         }
-        loop_rate.sleep();
     }
 }
 
@@ -95,9 +93,6 @@ int main(int argc, char **argv) {
 
     ros::Rate loop_rate(100);
 
-    
-
-
     // Initialise NGIMU receive module
     NgimuReceiveInitialise();
 
@@ -108,8 +103,6 @@ int main(int argc, char **argv) {
     NgimuReceiveSetEulerCallback(ngimuEulerCallback);
 
     
-
-
     while(ros::ok()) {
         
         sensor_msgs::Imu msg;
