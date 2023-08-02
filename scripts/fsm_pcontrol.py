@@ -192,7 +192,7 @@ class fsm_pcontrol(fsm_state):
         rot_vel = self.kf.x[9:12]
 
 
-        self.rot_quat = quaternion_from_euler(self.kf.x[0:4])
+        self.rot_quat = quaternion_from_euler(self.kf.x[3:6])
         rpy_vel_targets = self.qp_attitude_controller.get_angular_setpoint(self.rot_target, self.rot_quat)
         
         
