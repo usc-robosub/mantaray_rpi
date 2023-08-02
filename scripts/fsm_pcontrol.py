@@ -1,6 +1,7 @@
 import rospy
 import numpy as np
 from sensor_msgs.msg import Imu
+from mantaray_rpi.msg import Dvl
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 from qp_attitude_controller import QuaternionAttitudeController
 from fsm_state import fsm_state
@@ -9,6 +10,7 @@ from filterpy.kalman import KalmanFilter
 from filterpy.common import Q_discrete_white_noise
 
 IMU_TOPIC = "mantaray/imu"
+DVL_TOPIC = "mantaray/dvl"
 KF_ANGULAR = 120
 
 G = 9.80665
@@ -23,7 +25,11 @@ H = np.array([  [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], # roll
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0], # yaw rate
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # x accel
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], # y accel
-                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]])# z accel
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],# z accel
+                [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], #x vel
+                [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], #y vel
+                [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], #z vel
+                [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]) #altitude
 
 
 # initialize Q
@@ -33,11 +39,16 @@ Q = np.eye(18)*0.1
 class fsm_pcontrol(fsm_state):
     def __init__(self):
         self.name = 'pcontrol'
-        self.kf = KalmanFilter(dim_x=18, dim_z=9, dim_u=8)
+        self.kf = KalmanFilter(dim_x=18, dim_z=12, dim_u=8)
         self.kf.x = np.zeros(18)
         self.kf.P *= 1000
         self.kf.R *= 0
         self.kf.H = H
+        
+        self.acc_cov = np.zeros(9)
+        self.ang_cov = np.zeros(9)
+        self.ori_cov = np.zeros(9)
+        self.dvl_cov = np.zeros(9)
         
         self.Z = np.zeros(9)
 
@@ -58,10 +69,17 @@ class fsm_pcontrol(fsm_state):
         self.rot_quat = [0,0,0,0]
 
         self.imu_listener = rospy.Subscriber(IMU_TOPIC, Imu, self.imu_callback)
+        self.dvl_listener = rospy.Subscriber(DVL_TOPIC, Dvl, self.dvl_callback)
+        
+    def dvl_callback(self, data):
+        if data.valid == True:
+            self.Z[9:12] = np.array([data.velocity.x, data.velocity.y, data.velocity.z])
+            self.dvl_cov = np.eye*data.fom
+            self.dvl_cov = self.dvl_cov.flatten()
+        
+        
 
     def imu_callback(self, data):
-
-
         imu_quat = np.zeros(4)
 
         imu_quat[0] = data.orientation.x
@@ -74,7 +92,7 @@ class fsm_pcontrol(fsm_state):
         #temp
         rot_quat = imu_quat
 
-        self.Z = np.array([imu_euler[0],
+        self.Z[0:9] = np.array([imu_euler[0],
              imu_euler[1],
              imu_euler[2],
              data.angular_velocity.x*np.pi/180, #convert to radians per second
@@ -86,34 +104,12 @@ class fsm_pcontrol(fsm_state):
         
         # create covariance matrix for the imu within the 18x18 model
         
-        ori_cov = np.array(data.orientation_covariance)
-        ang_cov = np.array(data.angular_velocity_covariance)
+        self.ori_cov = np.array(data.orientation_covariance)
+        self.ang_cov = np.array(data.angular_velocity_covariance)
         #acc_cov = np.array(data.linear_acceleration_covariance)
         
-        acc_cov = np.eye(3)*0.2
-        acc_cov = acc_cov.flatten()
-        
-        self.R = np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,ori_cov[0],ori_cov[1],ori_cov[2],0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,ori_cov[3],ori_cov[4],ori_cov[5],0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,ori_cov[6],ori_cov[7],ori_cov[8],0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,ang_cov[0],ang_cov[1],ang_cov[2],0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,ang_cov[3],ang_cov[4],ang_cov[5],0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,ang_cov[6],ang_cov[7],ang_cov[8],0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,acc_cov[0],acc_cov[1],acc_cov[2],0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,acc_cov[3],acc_cov[4],acc_cov[5],0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,acc_cov[6],acc_cov[7],acc_cov[8],0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]])
-        
-
-        
+        self.acc_cov = np.eye(3)*0.2
+        self.acc_cov = self.acc_cov.flatten()
         
         
 
@@ -149,6 +145,25 @@ class fsm_pcontrol(fsm_state):
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]])
+        
+        self.R = np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                          [0,0,0,self.ori_cov[0],self.ori_cov[1],self.ori_cov[2],0,0,0,0,0,0,0,0,0,0,0,0],
+                          [0,0,0,self.ori_cov[3],self.ori_cov[4],self.ori_cov[5],0,0,0,0,0,0,0,0,0,0,0,0],
+                          [0,0,0,self.ori_cov[6],self.ori_cov[7],self.ori_cov[8],0,0,0,0,0,0,0,0,0,0,0,0],
+                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                          [0,0,0,0,0,0,0,0,0,self.ang_cov[0],self.ang_cov[1],self.ang_cov[2],0,0,0,0,0,0],
+                          [0,0,0,0,0,0,0,0,0,self.ang_cov[3],self.ang_cov[4],self.ang_cov[5],0,0,0,0,0,0],
+                          [0,0,0,0,0,0,0,0,0,self.ang_cov[6],self.ang_cov[7],self.ang_cov[8],0,0,0,0,0,0],
+                          [0,0,0,0,0,0,0,0,0,0,0,0,self.acc_cov[0],self.acc_cov[1],self.acc_cov[2],0,0,0],
+                          [0,0,0,0,0,0,0,0,0,0,0,0,self.acc_cov[3],self.acc_cov[4],self.acc_cov[5],0,0,0],
+                          [0,0,0,0,0,0,0,0,0,0,0,0,self.acc_cov[6],self.acc_cov[7],self.acc_cov[8],0,0,0],
+                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]])
 
         self.kf.F = A
 

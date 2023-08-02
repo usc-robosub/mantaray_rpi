@@ -1,6 +1,8 @@
+#!/usr/bin/env python3
+
 from wldvl import WlDVL
 import rospy
-from mantaray_rpi.msg import DVL
+from mantaray_rpi.msg import Dvl
 
 dvl = WlDVL("/dev/ttyACM1", 115200)
 
@@ -8,12 +10,12 @@ dvl = WlDVL("/dev/ttyACM1", 115200)
 def dvl_publisher_callback():
     rospy.init_node('dvl_publisher', anonymous=False)
     rospy.loginfo("dvl_publisher node started")
-    pub = rospy.Publisher('dvl', String, queue_size=10)
+    pub = rospy.Publisher('/mantaray/dvl', String, queue_size=10)
     
     while not rospy.is_shutdown():
         data = dvl.read()
         
-        msg = DVL()
+        msg = Dvl()
         msg.header.stamp = rospy.Time.now()
         msg.header.frame_id = 'world'
         msg.velocity.x = data['vx']
