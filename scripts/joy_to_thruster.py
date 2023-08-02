@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 from std_msgs.msg import Float64, Float64MultiArray
-from uuv_gazebo_ros_plugins_msgs.msg import FloatStamped
-
+#from uuv_gazebo_ros_plugins_msgs.msg import FloatStamped
+from mantaray_rpi.msg import FloatStamped
 NUM_THRUSTERS = 8
 enable_joys = False # Enables the Joy Sticks
 saturation = 2

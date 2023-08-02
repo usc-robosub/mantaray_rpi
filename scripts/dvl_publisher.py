@@ -4,7 +4,7 @@ from wldvl import WlDVL
 import rospy
 from mantaray_rpi.msg import Dvl
 
-dvl = WlDVL("/dev/ttyACM1", 115200)
+dvl = WlDVL("/dev/ttyUSB0", 115200)
 
 
 def dvl_publisher_callback():

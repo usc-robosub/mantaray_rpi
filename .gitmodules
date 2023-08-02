@@ -1,3 +1,6 @@
 [submodule "include/dvl-python"]
 	path = include/dvl-python
 	url = https://github.com/waterlinked/dvl-python.git
+[submodule "scripts/dvl-python"]
+	path = scripts/dvl-python
+	url = https://github.com/waterlinked/dvl-python.git

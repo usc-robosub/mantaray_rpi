@@ -11,7 +11,7 @@ import math
 # import pandas as pd
 # from mantaray_rpi.msg import FloatStamped
 import time
-
+from std_msgs.msg import Float64
 REVERSED_THRUSTERS = [0, 1, 2, 3, 4, 5]
 VALID_VOLTAGES = [10, 12, 14, 16, 18, 20]
 
@@ -22,7 +22,7 @@ MIN_THRUST = -2
 MAX_THRUST = 2
 MIN_ACCEL = 0.01
 MAX_ACCEL = 0.1
-DEFAULT_ACCEL = 0.05
+DEFAULT_ACCEL = 0.03
 UPDATE_DELAY = 20 # IN ms
 PWM_FREQ = 218
 
@@ -121,6 +121,7 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
 
     def thrusterCallback(self, data):
         # A callback for the mantaray/thruster_{num} topic
+        print(self.currentThrust)
         self.setTargetThrust(data.data)
 
     def update(self):
@@ -206,7 +207,8 @@ def initThrusters(output_type = "real", debug = False):
         thrusters[5] = Thruster(5, 1, 1, "real")
         thrusters[6] = Thruster(6, 2, 1, "real")
         thrusters[7] = Thruster(7, 4, 1, "real")
-
+        for i in range(NUM_THRUSTERS):
+            rospy.Subscriber("/mantaray/thruster/"+ str(i) + "/input", Float64, thrusters[i].thrusterCallback)
         for i in range(NUM_THRUSTERS):
             init_thrusts = [k/1000 for k in range(-100, 100, 20)]
             stopping_thrusts = [k/1000 for k in range(100, 0, -20)]
@@ -248,7 +250,7 @@ if __name__ == "__main__":
     if (output_type == "real"):
         import busio
         import board
-        from adafruit_pcas9685 import PCA9685
+        from adafruit_pca9685 import PCA9685
         import pandas as pd
         from mantaray_rpi.msg import FloatStamped
         initPcas(addresses=[0x40, 0x41], debug = True)
