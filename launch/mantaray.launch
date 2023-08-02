@@ -1,4 +1,4 @@
 <launch>
   <node name="imu_publisher" pkg="mantaray_rpi" type="imu_publisher" output="screen" respawn="true"/>
-  <node name="main" pkg="mantaray_rpi" type="main.py" output="screen" respawn="true"/>
+  <node name="mantaray_control" pkg="mantaray_rpi" type="main.py" output="screen" respawn="true"/>
 </launch>

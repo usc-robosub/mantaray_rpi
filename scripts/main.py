@@ -19,11 +19,10 @@ sub_control_state = fsm()
 
 def thruster_publisher(name, fsm):
     
-    rospy.init_node('ros_control', anonymous=True) 
+    rospy.init_node('mantaray_control', anonymous=True) 
     sub_control_state.set_state(1)
 
     pub = []
-
 
     sub_control_state.current_state.set_rot_target(math.radians(0),math.radians(0),math.radians(0))
 
