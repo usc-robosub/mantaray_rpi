@@ -1,14 +1,14 @@
 #include "ros/ros.h"
 #include "sensor_msgs/Imu.h"
 #include <iostream>
-#include "serial/serial.h"
+#include "serialib.h"
 #include <string>
 #include "Osc99.h"
 #include "NgimuReceive.h"
 #include <thread>
 
 
-std::string port = "/dev/ttyACM0";
+#define PORT "/dev/ttyACM0"
 
 ros::Publisher imu_pub;
 
@@ -18,16 +18,16 @@ float accel[3];
 float mag[3];
 float baro = 0;
 
-serial::Serial my_serial(port, 115200, serial::Timeout::simpleTimeout(500));
+serialib serial;
 
 void serial_imu_callback() {
     // Process each received byte
     while(true) {
-        while (my_serial.available() > 0) {
+        while (serial.available() > 0) {
             try
             {
                 uint8_t* buff;
-                my_serial.read(buff, 1);
+                serial.readBytes(buff, 1, 1000, 0);
                 NgimuReceiveProcessSerialByte(*buff);
             }
             catch(const std::exception& e)
@@ -78,6 +78,11 @@ void ngimuEulerCallback(const NgimuEuler ngimuEuler) {
 }
 
 int main(int argc, char **argv) {
+
+    // Connection to serial port
+    serial.openDevice(PORT, 115200);
+
+    
     
     ros::init(argc, argv, "imu_publisher");
 
@@ -125,4 +130,6 @@ int main(int argc, char **argv) {
 
         loop_rate.sleep();
     }
+
+    serial.closeDevice();
 }

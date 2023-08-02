@@ -11,7 +11,6 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
-  serial
   std_msgs
   message_generation
 )
@@ -105,8 +104,8 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES mantaray_rpi
+INCLUDE_DIRS include
+LIBRARIES mantaray_rpi
   CATKIN_DEPENDS roscpp rospy serial
 #  DEPENDS system_lib
 )
@@ -121,6 +120,7 @@ include_directories(
 include
   ${catkin_INCLUDE_DIRS}
   include/Osc99
+  include/serialib
   
 )
 
@@ -142,6 +142,8 @@ src/Osc99/OscSlip.c)
 add_library(osc99 SHARED ${OSC99_SOURCES})
 
 add_library(ngimurecieve src/NgimuReceive.c)
+
+add_library(serialib src/serialib/serialib.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -168,6 +170,7 @@ target_link_libraries(imu_publisher
   ${catkin_LIBRARIES}
   ngimurecieve
   osc99
+  serialib
 )
 
 #############
