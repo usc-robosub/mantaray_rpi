@@ -1,7 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python   
 
 import time
 import rospy
+import pandas as pd
+import rospkg
 import math
 # import busio
 # import board
@@ -14,15 +16,17 @@ REVERSED_THRUSTERS = [0, 1, 2, 3, 4, 5]
 VALID_VOLTAGES = [10, 12, 14, 16, 18, 20]
 
 NUM_THRUSTERS = 8
-MIN_THRUST = -1
-MAX_THRUST = 1
+
+# For real
+MIN_THRUST = -2
+MAX_THRUST = 2
 MIN_ACCEL = 0.01
 MAX_ACCEL = 0.1
 DEFAULT_ACCEL = 0.05
 UPDATE_DELAY = 20 # IN ms
-STILL_UPDATING = 100 
 PWM_FREQ = 218
 
+SIM_MULT = 30
 running = True
 updatingThrusters = True
 PCA_ADDRESSES = [0x40, 0x41]
@@ -62,7 +66,11 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
         self.initialized = False
         self.output_type = output_type
 
-        self.data_file = "20 V/force_pwm.csv"
+        self.thrustMult = SIM_MULT if self.output_type == "simulation" else 1
+
+        r = rospkg.RosPack()
+        dir = r.get_path('mantaray_rpi')
+        self.data_file = dir + "/data/20 V/force_pwm.csv"   
         self.iodata = pd.read_csv(self.data_file)
 
     def setTargetThrust(self, target):
@@ -77,7 +85,7 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
             if (self.targetThrust-target > MAX_ACCEL):
                 target = self.targetThrust-MAX_ACCEL
             elif (target-self.targetThrust > MAX_ACCEL):
-                target = MAX_ACCEL-self.targetThrust
+                target = MAX_ACCEL+self.targetThrust
             self.targetThrust = target
         updatingThrusters = True
     
@@ -144,7 +152,10 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
                 self.update_pwm()
                 PCAs[self.pca_num].channels[self.channel_num].duty_cycle = round(microseconds_to_int16(self.pwm, PCAs[self.pca_num].frequency))            
             elif self.output_type == "simulation":
-                pubs[self.thruster_num].publish(FloatStamped(self.currentThrust * 30))
+                msg = FloatStamped()
+                msg.header.stamp = rospy.Time.now()
+                msg.data = self.currentThrust * self.thrustMult
+                pubs[self.thruster_num].publish(msg)
         elif not self.initialized:
             PCAs[self.pca_num].channels[self.channel_num].duty_cycle = round(microseconds_to_int16(self.pwm, PCAs[self.pca_num].frequency))            
             self.initialized=True
@@ -161,7 +172,7 @@ def initPcas(addresses = [0x40], freq = PWM_FREQ, debug = False):
 def initPubs(debug = False):
     global pubs
     for i in range(len(pubs)):
-        pubs[i] = rospy.Publisher("/mantaray/thruster_"+i+"/input", FloatStamped, queue_size = 10)
+        pubs[i] = rospy.Publisher("/mantaray/thrusters/"+str(i)+"/input", FloatStamped, queue_size = 10)
     if (debug):
         print("Sim publishers have been initialized")
 
@@ -181,21 +192,21 @@ def initThrusters(output_type = "real", debug = False):
     if (output_type == "simulation"):
         for i in range(NUM_THRUSTERS):
             if (i < 4):
-                thrusters[i] = Thruster(i, i)
+                thrusters[i] = Thruster(i, i, 0, "simulation")
             else:
-                thrusters[i] = Thruster(i, i-4, 1)
-    elif (output_type == "real"):
-        thrusters[0] = Thruster(0, 2, 0)
-        thrusters[1] = Thruster(1, 1, 0)
-        thrusters[2] = Thruster(2, 4, 0)
-        thrusters[3] = Thruster(3, 3, 0)
-        thrusters[4] = Thruster(4, 3, 1)
-        thrusters[5] = Thruster(5, 1, 1)
-        thrusters[6] = Thruster(6, 2, 1)
-        thrusters[7] = Thruster(7, 4, 1)
-
+                thrusters[i] = Thruster(i, i-4, 1,"simulation")
         for i in range(NUM_THRUSTERS):
-            rospy.Subscriber("/mantaray/thrusters/"+ str(i) + "/input", FloatStamped, thrusters[0].thrustCallback)
+            rospy.Subscriber("/mantaray/thrusters/"+ str(i) + "/input", Float64, thrusters[i].thrusterCallback)
+    elif (output_type == "real"):
+        thrusters[0] = Thruster(0, 2, 0, "real")
+        thrusters[1] = Thruster(1, 1, 0, "real")
+        thrusters[2] = Thruster(2, 4, 0, "real")
+        thrusters[3] = Thruster(3, 3, 0, "real")
+        thrusters[4] = Thruster(4, 3, 1, "real")
+        thrusters[5] = Thruster(5, 1, 1, "real")
+        thrusters[6] = Thruster(6, 2, 1, "real")
+        thrusters[7] = Thruster(7, 4, 1, "real")
+
         for i in range(NUM_THRUSTERS):
             init_thrusts = [k/1000 for k in range(-100, 100, 20)]
             stopping_thrusts = [k/1000 for k in range(100, 0, -20)]
@@ -243,6 +254,7 @@ if __name__ == "__main__":
         initPcas(addresses=[0x40, 0x41], debug = True)
     elif (output_type == "simulation"):
         from uuv_gazebo_ros_plugins_msgs.msg import FloatStamped
+        from std_msgs.msg import Float64
         initPubs(debug=True)
         
     initThrusters(output_type, debug = True)
