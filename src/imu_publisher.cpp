@@ -18,26 +18,32 @@ float accel[3];
 float mag[3];
 float baro = 0;
 
-serialib serial;
+
 
 void serial_imu_callback() {
     // Process each received byte
+    serialib serial;
+    serial.openDevice(PORT, 115200);
     while(true) {
+
         while (serial.available() > 0) {
             try
             {
-                char* buff;
-                serial.readChar(buff, 500);
-                std::cout << *buff << std::endl;
-                //NgimuReceiveProcessSerialByte(*buff);
+                char* buff = new char[4];
+                serial.readBytes(buff, 1, 500, 0);
+                
+                //std::cout << *buff << std::endl;
+                NgimuReceiveProcessSerialByte(*buff);
+                delete[] buff;
             }
             catch(const std::exception& e)
             {
                 std::cerr << e.what() << '\n';
             }
-            
+                
         }
     }
+    serial.closeDevice();
 }
 
 // This function is called each time there is a receive error
@@ -81,7 +87,6 @@ void ngimuEulerCallback(const NgimuEuler ngimuEuler) {
 int main(int argc, char **argv) {
 
     // Connection to serial port
-    serial.openDevice(PORT, 115200);
     
     ros::init(argc, argv, "imu_publisher");
 
@@ -128,6 +133,4 @@ int main(int argc, char **argv) {
 
         loop_rate.sleep();
     }
-
-    serial.closeDevice();
 }
