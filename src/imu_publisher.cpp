@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
     // Assign NGIMU receive callback functions
     NgimuReceiveSetReceiveErrorCallback(ngimuReceiveErrorCallback);
     NgimuReceiveSetSensorsCallback(ngimuSensorsCallback);
-    NgimuReceivdeSetQuaternionCallback(ngimuQuaternionCallback);
+    NgimuReceiveSetQuaternionCallback(ngimuQuaternionCallback);
     NgimuReceiveSetEulerCallback(ngimuEulerCallback);
 
     std::thread t1 (serial_imu_callback);
