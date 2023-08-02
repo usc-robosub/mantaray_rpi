@@ -87,6 +87,8 @@ class fsm_pcontrol(fsm_state):
         imu_quat[2] = data.orientation.z
         imu_quat[3] = data.orientation.w
         
+        self.rot_quat = imu_quat
+        
         imu_euler = euler_from_quaternion(imu_quat)
 
         #temp
@@ -192,7 +194,6 @@ class fsm_pcontrol(fsm_state):
         rot_vel = self.kf.x[9:12]
 
 
-        self.rot_quat = quaternion_from_euler(self.kf.x[3:6])
         rpy_vel_targets = self.qp_attitude_controller.get_angular_setpoint(self.rot_target, self.rot_quat)
         
         
