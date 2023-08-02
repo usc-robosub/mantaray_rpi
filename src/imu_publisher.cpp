@@ -86,8 +86,7 @@ int main(int argc, char **argv) {
     
     ros::init(argc, argv, "imu_publisher");
 
-    std::thread t1 (serial_imu_callback);
-
+    
     ros::NodeHandle n;
 
     imu_pub = n.advertise<sensor_msgs::Imu>("mantaray/imu", 1000);
@@ -105,6 +104,9 @@ int main(int argc, char **argv) {
     NgimuReceiveSetSensorsCallback(ngimuSensorsCallback);
     NgimuReceiveSetQuaternionCallback(ngimuQuaternionCallback);
     NgimuReceiveSetEulerCallback(ngimuEulerCallback);
+
+    std::thread t1 (serial_imu_callback);
+
 
     while(ros::ok()) {
         
