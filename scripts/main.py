@@ -5,7 +5,7 @@ import time
 from fsm import fsm
 from fsm_basic import fsm_basic
 from fsm_pcontrol import fsm_pcontrol
-from uuv_gazebo_ros_plugins_msgs.msg import FloatStamped
+from mantaray_rpi.msg import FloatStamped
 from nav_msgs.msg import Odometry
 from std_msgs.msg import String, Header
 import math
@@ -52,4 +52,7 @@ def stop():
 
 
 if __name__ == "__main__":
+    print("initializing thrusters...")
+    time.sleep(3)
+    print("thrusters initialized")
     thruster_publisher(SUB_NAME, fsm)
