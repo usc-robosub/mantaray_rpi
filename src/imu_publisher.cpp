@@ -17,6 +17,7 @@ float gyro[3];
 float accel[3];
 float mag[3];
 float baro = 0;
+float earth[3];
 
 
 
@@ -84,6 +85,12 @@ void ngimuEulerCallback(const NgimuEuler ngimuEuler) {
     
 }
 
+void ngimuEarthAccelerationCallback(const NgimuEarthAcceleration ngimuEarthAcceleration) {
+    earth[0] = ngimuEarthAcceleration.x;
+    earth[1] = ngimuEarthAcceleration.y;
+    earth[2] = ngimuEarthAcceleration.z;
+}
+
 int main(int argc, char **argv) {
 
     // Connection to serial port
@@ -105,6 +112,7 @@ int main(int argc, char **argv) {
     NgimuReceiveSetSensorsCallback(ngimuSensorsCallback);
     NgimuReceiveSetQuaternionCallback(ngimuQuaternionCallback);
     NgimuReceiveSetEulerCallback(ngimuEulerCallback);
+    NgimuReceiveSetEarthAccelerationCallback(ngimuEarthAccelerationCallback);
 
     std::thread t1 (serial_imu_callback);
 
@@ -123,9 +131,9 @@ int main(int argc, char **argv) {
         msg.angular_velocity.y = gyro[1];
         msg.angular_velocity.z = gyro[2];
 
-        msg.linear_acceleration.x = accel[0];
-        msg.linear_acceleration.y = accel[1];
-        msg.linear_acceleration.z = accel[2];
+        msg.linear_acceleration.x = earth[0];
+        msg.linear_acceleration.y = earth[1];
+        msg.linear_acceleration.z = earth[2];
         
         imu_pub.publish(msg);
         

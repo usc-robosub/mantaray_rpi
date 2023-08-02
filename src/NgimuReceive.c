@@ -19,6 +19,7 @@ static void (*receiveErrorCallback)(const char* const errorMessage);
 static void (*sensorsCallback)(const NgimuSensors ngimuSensors);
 static void (*quaternionCallback)(const NgimuQuaternion ngimuQuaternion);
 static void (*eulerCallback)(const NgimuEuler ngimuEuler);
+static void (*earthAccelerationCallback)(const NgimuEarthAcceleration ngimuEarthAcceleration);
 
 //------------------------------------------------------------------------------
 // Function prototypes
@@ -29,6 +30,7 @@ static OscError ProcessAddress(const OscTimeTag * const oscTimeTag, OscMessage *
 static OscError ProcessSensors(const OscTimeTag * const oscTimeTag, OscMessage * const oscMessage);
 static OscError ProcessQuaternion(const OscTimeTag * const oscTimeTag, OscMessage * const oscMessage);
 static OscError ProcessEuler(const OscTimeTag * const oscTimeTag, OscMessage * const oscMessage);
+static OscError ProcessEarthAcceleration(const OscTimeTag * const oscTimeTag, OscMessage * const oscMessage);
 
 //------------------------------------------------------------------------------
 // Functions
@@ -72,6 +74,10 @@ void NgimuReceiveSetQuaternionCallback(void (*newQuaternionCallback)(const Ngimu
  */
 void NgimuReceiveSetEulerCallback(void (*newEulerCallback)(const NgimuEuler ngimuEuler)) {
     eulerCallback = newEulerCallback;
+}
+
+void NgimuReceiveSetEarthAccelerationCallback(void (*newEarthAccelerationCallback)(const NgimuEarthAcceleration ngimuEarthAcceleration)) {
+    earthAccelerationCallback = newEarthAccelerationCallback;
 }
 
 /**
@@ -138,6 +144,9 @@ static OscError ProcessAddress(const OscTimeTag * const oscTimeTag, OscMessage *
     }
     if (OscAddressMatch(oscMessage->oscAddressPattern, "/euler")) {
         return ProcessEuler(oscTimeTag, oscMessage);
+    }
+    if (OscAddressMatch(oscMessage->oscAddressPattern, "/earth")) {
+        return ProcessEarthAcceleration(oscTimeTag, oscMessage);
     }
 
     // OSC address not recognised
@@ -317,6 +326,41 @@ static OscError ProcessEuler(const OscTimeTag * const oscTimeTag, OscMessage * c
 
     // Callback
     eulerCallback(ngimuEuler);
+    return OscErrorNone;
+}
+
+static OscError ProcessEarthAcceleration(const OscTimeTag * const oscTimeTag, OscMessage * const oscMessage) {
+
+    // Do nothing if no callback assigned
+    if (earthAccelerationCallback == NULL) {
+        return OscErrorNone;
+    }
+
+    // Get timestamp
+    NgimuEarthAcceleration ngimuEarthAcceleration;
+    ngimuEarthAcceleration.timestamp = *oscTimeTag;
+
+    // Get X element
+    OscError oscError;
+    oscError = OscMessageGetArgumentAsFloat32(oscMessage, &ngimuEarthAcceleration.x);
+    if (oscError != OscErrorNone) {
+        return oscError;
+    }
+
+    // Get Y element
+    oscError = OscMessageGetArgumentAsFloat32(oscMessage, &ngimuEarthAcceleration.y);
+    if (oscError != OscErrorNone) {
+        return oscError;
+    }
+
+    // Get Z element
+    oscError = OscMessageGetArgumentAsFloat32(oscMessage, &ngimuEarthAcceleration.z);
+    if (oscError != OscErrorNone) {
+        return oscError;
+    }
+
+    // Callback
+    earthAccelerationCallback(ngimuEarthAcceleration);
     return OscErrorNone;
 }
 
