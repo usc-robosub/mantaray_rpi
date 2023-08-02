@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python   
 
 import time
 import rospy
@@ -196,7 +196,7 @@ def initThrusters(output_type = "real", debug = False):
             else:
                 thrusters[i] = Thruster(i, i-4, 1,"simulation")
         for i in range(NUM_THRUSTERS):
-            rospy.Subscriber("/mantaray/thruster/"+ str(i) + "/input", Float64, thrusters[i].thrusterCallback)
+            rospy.Subscriber("/mantaray/thrusters/"+ str(i) + "/input", Float64, thrusters[i].thrusterCallback)
     elif (output_type == "real"):
         thrusters[0] = Thruster(0, 2, 0, "real")
         thrusters[1] = Thruster(1, 1, 0, "real")
@@ -244,7 +244,7 @@ def initThrusters(output_type = "real", debug = False):
 
 if __name__ == "__main__":
     rospy.init_node("thruster_controller", anonymous=False)
-    output_type = rospy.get_param("/output_type", default="simulation")
+    output_type = rospy.get_param("/output_type", default="real")
     if (output_type == "real"):
         import busio
         import board
