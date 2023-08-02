@@ -26,7 +26,7 @@ void serial_imu_callback() {
         while (serial.available() > 0) {
             try
             {
-                uint8_t* buff;
+                char* buff;
                 serial.readChar(buff, 500);
                 NgimuReceiveProcessSerialByte(*buff);
             }
