@@ -11,7 +11,7 @@ from filterpy.common import Q_discrete_white_noise
 
 IMU_TOPIC = "mantaray/imu"
 DVL_TOPIC = "mantaray/dvl"
-KF_ANGULAR = 120
+KF_ANGULAR = 10
 
 G = 9.80665
 
@@ -56,9 +56,9 @@ class fsm_pcontrol(fsm_state):
 
         # 0 is x, 1 is y, 2 is z
         self.rot_pid = [None]*3
-        self.rot_pid[0] = pid(20,0,0)
-        self.rot_pid[1] = pid(20,0,0)
-        self.rot_pid[2] = pid(20,0,0) #150, 0 ,0
+        self.rot_pid[0] = pid(5,0,0)
+        self.rot_pid[1] = pid(5,0,0)
+        self.rot_pid[2] = pid(5,0,0) #150, 0 ,0
         
         self.qp_attitude_controller = QuaternionAttitudeController(2)
 
@@ -205,10 +205,10 @@ class fsm_pcontrol(fsm_state):
         self.thrust_list[1] = -self.rot_pid[2].get_output_ff(KF_ANGULAR, rpy_vel_targets[2])
         self.thrust_list[2] = self.rot_pid[2].get_output_ff(KF_ANGULAR, rpy_vel_targets[2])
         self.thrust_list[3] = -self.rot_pid[2].get_output_ff(KF_ANGULAR, rpy_vel_targets[2])
-        self.thrust_list[4] = -self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1]) - self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0])
-        self.thrust_list[5] = self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1]) - self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0])
-        self.thrust_list[6] = -self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1]) +  self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0])
-        self.thrust_list[7] = self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1]) + self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0])
+        self.thrust_list[4] = -self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) - self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[0])
+        self.thrust_list[5] = self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) - self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[0])
+        self.thrust_list[6] = -self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) +  self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[0])
+        self.thrust_list[7] = self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) + self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[0])
 
         # self.kf.predict(u=self.thrust_list)
         self.kf.predict()
