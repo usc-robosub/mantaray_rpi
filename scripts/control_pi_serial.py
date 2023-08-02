@@ -6,7 +6,7 @@ import busio
 import math
 import board
 from adafruit_pcas9685 import PCA9685
-# from thruster.msg import FloatStamped
+from mantaray_rpi.msg import FloatStamped
 import pandas as pd
 import time
 
