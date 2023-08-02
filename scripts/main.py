@@ -53,6 +53,6 @@ def stop():
 
 if __name__ == "__main__":
     print("initializing thrusters...")
-    time.sleep(3)
+    time.sleep(8)
     print("thrusters initialized")
     thruster_publisher(SUB_NAME, sub_control_state)

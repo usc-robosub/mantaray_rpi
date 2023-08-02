@@ -191,7 +191,9 @@ class fsm_pcontrol(fsm_state):
                 [0.03268559890777384, -0.03268614782371279, 0.032685781879760206, -0.032535964930304084, 0, 0, 0, 0]])
                 
         
-        rot_vel = self.kf.x[9:12]
+        #rot_vel = self.kf.x[9:12]
+        
+        rot_vel = self.Z[3:6]
 
 
         rpy_vel_targets = self.qp_attitude_controller.get_angular_setpoint(self.rot_target, self.rot_quat)
