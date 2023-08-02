@@ -1,7 +1,21 @@
 # mantaray_rpi
-Contains the Ros package that handles the control code for the raspberry pi.
+ROS package that handles control on the Raspberry Pi.
+
+## Installation
+
+```
+cd ~/catkin_ws/src
+git clone git@github.com:USCAUVTeam/mantaray_rpi.git
+cd ..
+catkin_make
+```
+
+## Launching
+
+```
+roslaunch mantaray_rpi mantaray.launch
+```
 
 ## Dependencies:
-[Serial] (https://github.com/wjwwood/serial)
+* [dvl-python](https://github.com/waterlinked/dvl-python/tree/master/serial) - A python library containing protocol for interacting with the Water Linked DVL A50
 
-Clone the above repository into `catkin_ws/src`, then follow the build instructions linked.

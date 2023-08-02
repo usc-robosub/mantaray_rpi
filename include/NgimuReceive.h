@@ -57,6 +57,13 @@ typedef struct {
     float yaw;
 } NgimuEuler;
 
+typedef struct {
+    OscTimeTag timestamp;
+    float x;
+    float y;
+    float z;
+} NgimuEarthAcceleration;
+
 //------------------------------------------------------------------------------
 // Function prototypes
 
@@ -65,6 +72,7 @@ void NgimuReceiveSetReceiveErrorCallback(void (*newReceiveErrorCallback)(const c
 void NgimuReceiveSetSensorsCallback(void (*newSensorsCallback)(const NgimuSensors ngimuSensors));
 void NgimuReceiveSetQuaternionCallback(void (*newQuaternionCallback)(const NgimuQuaternion ngimuQuaternion));
 void NgimuReceiveSetEulerCallback(void (*newEulerCallback)(const NgimuEuler ngimuEuler));
+void NgimuReceiveSetEarthAccelerationCallback(void (*newEarthAccelerationCallback)(const NgimuEarthAcceleration ngimuEarthAcceleration));
 void NgimuReceiveProcessSerialByte(const char byte);
 void NgimuReceiveProcessUdpPacket(const char * const source, const size_t sourceSize);
 

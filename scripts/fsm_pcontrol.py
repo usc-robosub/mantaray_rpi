@@ -5,23 +5,25 @@ from tf.transformations import quaternion_from_euler, euler_from_quaternion
 from qp_attitude_controller import QuaternionAttitudeController
 from fsm_state import fsm_state
 from pid_control import pid
-from kalman_filter import kalmanfilter
-
+from filterpy.kalman import KalmanFilter
+from filterpy.common import Q_discrete_white_noise
 
 IMU_TOPIC = "mantaray/imu"
 KF_ANGULAR = 120
 
+G = 9.80665
+
 # initialize H for the imu
 
-H_IMU = np.array([  [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], # roll
-                    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], # pitch
-                    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], # yaw
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], # roll rate
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], # pitch rate
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0], # yaw rate
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # x accel
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], # y accel
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]])# z accel
+H = np.array([  [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], # roll
+                [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], # pitch
+                [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], # yaw
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], # roll rate
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], # pitch rate
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0], # yaw rate
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], # x accel
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], # y accel
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]])# z accel
 
 
 # initialize Q
@@ -31,7 +33,14 @@ Q = np.eye(18)*0.1
 class fsm_pcontrol(fsm_state):
     def __init__(self):
         self.name = 'pcontrol'
-        self.kf = kalmanfilter()
+        self.kf = KalmanFilter(dim_x=18, dim_z=9, dim_u=8)
+        self.kf.x = np.zeros(18)
+        self.kf.P *= 1000
+        self.kf.R *= 0
+        self.kf.H = H
+        
+        self.Z = np.zeros(9)
+
         self.last_imu_timestamp = 0
 
         # 0 is x, 1 is y, 2 is z
@@ -52,9 +61,6 @@ class fsm_pcontrol(fsm_state):
 
     def imu_callback(self, data):
 
-        if self.last_imu_timestamp > 0:
-            dt = data.header.stamp.secs - self.last_imu_timestamp
-        self.last_imu_timestamp = data.header.stamp.secs
 
         imu_quat = np.zeros(4)
 
@@ -68,33 +74,26 @@ class fsm_pcontrol(fsm_state):
         #temp
         rot_quat = imu_quat
 
-        Z = [imu_euler[0],
+        self.Z = np.array([imu_euler[0],
              imu_euler[1],
              imu_euler[2],
-             data.angular_velocity.x,
-             data.angular_velocity.y,
-             data.angular_velocity.z,
-             data.linear_acceleration.x,
-             data.linear_acceleration.y,
-             data.linear_acceleration.z]
-
-        ori_cov = data.orientation_covariance
-        angvel_cov = data.angular_velocity_covariance
-        linacc_cov = data.linear_acceleration_covariance
-
-        ori_cov = np.array([0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1])
-
-        if ori_cov[0] == -1:
-            ori_cov = np.zeros(9)
+             data.angular_velocity.x*np.pi/180, #convert to radians per second
+             data.angular_velocity.y*np.pi/180,
+             data.angular_velocity.z*np.pi/180,
+             data.linear_acceleration.x*G,
+             data.linear_acceleration.y*G,
+             data.linear_acceleration.z*G])
         
-        if angvel_cov[0] == -1:
-            angvel_cov = np.zeros(9)
-
-        if linacc_cov[0] == -1:
-            linacc_cov = np.zeros(9)
-
-
-        R_IMU = np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        # create covariance matrix for the imu within the 18x18 model
+        
+        ori_cov = np.array(data.orientation_covariance)
+        ang_cov = np.array(data.angular_velocity_covariance)
+        #acc_cov = np.array(data.linear_acceleration_covariance)
+        
+        acc_cov = np.eye(3)*0.2
+        acc_cov = acc_cov.flatten()
+        
+        self.R = np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                           [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                           [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                           [0,0,0,ori_cov[0],ori_cov[1],ori_cov[2],0,0,0,0,0,0,0,0,0,0,0,0],
@@ -103,20 +102,26 @@ class fsm_pcontrol(fsm_state):
                           [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                           [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                           [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                          [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                          [0,0,0,0,0,0,0,0,0,ang_cov[0],ang_cov[1],ang_cov[2],0,0,0,0,0,0],
+                          [0,0,0,0,0,0,0,0,0,ang_cov[3],ang_cov[4],ang_cov[5],0,0,0,0,0,0],
+                          [0,0,0,0,0,0,0,0,0,ang_cov[6],ang_cov[7],ang_cov[8],0,0,0,0,0,0],
+                          [0,0,0,0,0,0,0,0,0,0,0,0,acc_cov[0],acc_cov[1],acc_cov[2],0,0,0],
+                          [0,0,0,0,0,0,0,0,0,0,0,0,acc_cov[3],acc_cov[4],acc_cov[5],0,0,0],
+                          [0,0,0,0,0,0,0,0,0,0,0,0,acc_cov[6],acc_cov[7],acc_cov[8],0,0,0],
                           [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                           [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                           [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]])
+        
 
-        # self.kf.update(H_IMU, self.thrust_list, Z, Q, R_IMU, dt)
+        
+        
+        
 
-        rospy.loginfo(imu_euler)
+        # only print first 3 decimals
+        
+        #rospy.loginfo("%3f, %3f, %3f, %3f, %3f, %3f, %3f, %3f, %3f", self.Z[0], self.Z[1], self.Z[2], self.Z[3], self.Z[4], self.Z[5], self.Z[6], self.Z[7], self.Z[8])
 
+        rospy.loginfo(self.kf.x[6:9])
         
 
     def set_rot_target(self, r, p, y):
@@ -124,8 +129,52 @@ class fsm_pcontrol(fsm_state):
         
 
     def run(self, dt):
+
+        A = np.array([  
+                [1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0, 0, 0.5*dt**2, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0, 0, 0.5*dt**2, 0, 0, 0, 0],
+                [0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0, 0, 0.5*dt**2, 0, 0, 0],
+                [0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0, 0, 0.5*dt**2, 0, 0],
+                [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0, 0, 0.5*dt**2, 0],
+                [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0, 0, 0.5*dt**2],
+                [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]])
+
+        self.kf.F = A
+
+        B = np.array([  [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [-0.5, 0.5, 0.5, -0.5, 0, 0, 0, 0],
+                [-0.8660251013910845, -0.8660257817756856, 0.8660253281861298, 0.8660255549809972,0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 1, 1, 1, 1],
+                [0.10219096196414795, 0.10219104224953088, -0.1021909887259633, -0.10219101548775772, 0.2, 0.2, -0.2, -0.2],
+                [-0.059000061803713866, 0.0589999227453273, 0.0590000154509305, -0.058999969098135, 0.25, -0.25, 0.25, -0.25],
+                [0.03268559890777384, -0.03268614782371279, 0.032685781879760206, -0.032535964930304084, 0, 0, 0, 0]])
+                
         
-        rot_vel = self.kf.get_rpy_vel()
+        rot_vel = self.kf.x[9:12]
 
         rpy_vel_targets = self.qp_attitude_controller.get_angular_setpoint(self.rot_target, self.rot_quat)
         
@@ -142,6 +191,10 @@ class fsm_pcontrol(fsm_state):
         self.thrust_list[5] = self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1]) - self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0])
         self.thrust_list[6] = -self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1]) +  self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0])
         self.thrust_list[7] = self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1]) + self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0])
+
+        # self.kf.predict(u=self.thrust_list)
+        self.kf.predict()
+        self.kf.update(self.Z)
 
 
     def enter(self):
