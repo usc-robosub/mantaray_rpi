@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
     // Connection to serial port
     serial.openDevice(PORT, 115200);
 
-    
+    std::thread t1 (serial_imu_callback);
     
     ros::init(argc, argv, "imu_publisher");
 
@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
     NgimuReceiveSetQuaternionCallback(ngimuQuaternionCallback);
     NgimuReceiveSetEulerCallback(ngimuEulerCallback);
 
-    std::thread t1 (serial_imu_callback);
+    
 
 
     while(ros::ok()) {
