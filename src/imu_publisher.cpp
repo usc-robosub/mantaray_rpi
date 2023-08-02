@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
     NgimuReceiveSetQuaternionCallback(ngimuQuaternionCallback);
     NgimuReceiveSetEulerCallback(ngimuEulerCallback);
 
-    std::thread t1 (serial_imu_callback);
+    //std::thread t1 (serial_imu_callback);
 
 
     while(ros::ok()) {
