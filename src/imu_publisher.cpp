@@ -37,7 +37,7 @@ void serial_imu_callback() {
             }
             
         }
-        loop_rate.sleep()
+        loop_rate.sleep();
     }
 }
 
