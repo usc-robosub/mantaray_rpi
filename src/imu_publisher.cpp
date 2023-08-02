@@ -23,6 +23,7 @@ serialib serial;
 void serial_imu_callback() {
     // Process each received byte
     while(true) {
+        ros::Rate loop_rate(100);
         while (serial.available() > 0) {
             try
             {
@@ -36,6 +37,7 @@ void serial_imu_callback() {
             }
             
         }
+        loop_rate.sleep()
     }
 }
 
@@ -102,10 +104,10 @@ int main(int argc, char **argv) {
     // Assign NGIMU receive callback functions
     NgimuReceiveSetReceiveErrorCallback(ngimuReceiveErrorCallback);
     NgimuReceiveSetSensorsCallback(ngimuSensorsCallback);
-    NgimuReceiveSetQuaternionCallback(ngimuQuaternionCallback);
+    NgimuReceivdeSetQuaternionCallback(ngimuQuaternionCallback);
     NgimuReceiveSetEulerCallback(ngimuEulerCallback);
 
-    //std::thread t1 (serial_imu_callback);
+    std::thread t1 (serial_imu_callback);
 
 
     while(ros::ok()) {
