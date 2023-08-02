@@ -27,7 +27,8 @@ void serial_imu_callback() {
             try
             {
                 char* buff;
-                serial.readChar(buff, 500);
+                serial.readChar(buff, 1000);
+                std::cout << *buff << std::endl;
                 NgimuReceiveProcessSerialByte(*buff);
             }
             catch(const std::exception& e)
