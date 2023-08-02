@@ -39,7 +39,7 @@ Q = np.eye(18)*0.1
 class fsm_pcontrol(fsm_state):
     def __init__(self):
         self.name = 'pcontrol'
-        self.kf = KalmanFilter(dim_x=18, dim_z=12, dim_u=8)
+        self.kf = KalmanFilter(dim_x=18, dim_z=13, dim_u=8)
         self.kf.x = np.zeros(18)
         self.kf.P *= 1000
         self.kf.R *= 0
@@ -50,7 +50,7 @@ class fsm_pcontrol(fsm_state):
         self.ori_cov = np.zeros(9)
         self.dvl_cov = np.zeros(9)
         
-        self.Z = np.zeros(9)
+        self.Z = np.zeros(13)
 
         self.last_imu_timestamp = 0
 
@@ -117,7 +117,7 @@ class fsm_pcontrol(fsm_state):
         
         #rospy.loginfo("%3f, %3f, %3f, %3f, %3f, %3f, %3f, %3f, %3f", self.Z[0], self.Z[1], self.Z[2], self.Z[3], self.Z[4], self.Z[5], self.Z[6], self.Z[7], self.Z[8])
 
-        rospy.loginfo(self.kf.x[6:9])
+        rospy.loginfo(self.kf.x[3:6])
         
 
     def set_rot_target(self, r, p, y):

@@ -1,0 +1,7 @@
+<launch>
+    <param name="output_type" value="real"/>
+  <!-- <node name="remote_teleop_joy" pkg="wet_tests" type="remote_teleop_joy.py" output="screen" respawn="true"/> -->
+  <node name="joy_to_thruster" pkg="mantaray_rpi" type="joy_to_thruster.py" output="screen" respawn="true"/>
+  <node name="thrusters" pkg="mantaray_rpi" type="control_pi_serial.py" output="screen" respawn="false"/>
+  <!-- <node name= -->
+</launch> 
