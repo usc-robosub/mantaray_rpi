@@ -56,9 +56,9 @@ class fsm_pcontrol(fsm_state):
 
         # 0 is x, 1 is y, 2 is z
         self.rot_pid = [None]*3
-        self.rot_pid[0] = pid(5,0,0)
-        self.rot_pid[1] = pid(5,0,0)
-        self.rot_pid[2] = pid(5,0,0) #150, 0 ,0
+        self.rot_pid[0] = pid(0.5,0,0)
+        self.rot_pid[1] = pid(0.5,0,0)
+        self.rot_pid[2] = pid(0.5,0,0) #150, 0 ,0
         
         self.qp_attitude_controller = QuaternionAttitudeController(2)
 
