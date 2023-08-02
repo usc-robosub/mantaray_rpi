@@ -106,7 +106,7 @@ generate_messages(
 catkin_package(
 INCLUDE_DIRS include
 LIBRARIES mantaray_rpi
-  CATKIN_DEPENDS roscpp rospy serial
+  CATKIN_DEPENDS roscpp rospy
 #  DEPENDS system_lib
 )
 
