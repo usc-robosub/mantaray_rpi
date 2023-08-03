@@ -12,7 +12,7 @@ import math
 # from mantaray_rpi.msg import FloatStamped
 import time
 from std_msgs.msg import Float64
-REVERSED_THRUSTERS = [0, 1, 2, 3, 4, 5]
+REVERSED_THRUSTERS = [4, 5, 6]
 VALID_VOLTAGES = [10, 12, 14, 16, 18, 20]
 
 NUM_THRUSTERS = 8
@@ -107,30 +107,19 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
 
     def stopThrusters(self):
         self.stopping = True
-            
-    def update_pwm(self):
-            global voltage, VALID_VOLTAGES
-            # This calculates the approximate PWM signal necessary to get the needed thrust
-            if self.thruster_num in REVERSED_THRUSTERS:
-                thrust = -self.currentThrust
-            else:
-                thrust = self.currentThrust
-            df_closest = self.iodata.iloc[(self.iodata[' Force (Kg f)']-thrust).abs().argsort()[:1]]
-            # df_closest = self.iodata.iloc[(self.iodata[' Force (Kg f)']-self.currentThrust).abs().argsort()[:2]] # returns the 2 closest pwm values
-            self.pwm = df_closest.values[0][2]
 
     def thrusterCallback(self, data):
         # A callback for the mantaray/thruster_{num} topic
-        if (self.currentThrust != data.data):
-            print("Thruster["+ str(self.thruster_num) + "]: currentThrust:"+str(self.currentThrust))
-            print("data.data:" + str(data.data))
-            print("targetThrust:" + str(self.targetThrust))
+        # if (self.currentThrust != data.data):
+        #     print("Thruster["+ str(self.thruster_num) + "]: currentThrust:"+str(self.currentThrust))
+        #     print("data.data:" + str(data.data))
+        #     print("targetThrust:" + str(self.targetThrust))
         self.setTargetThrust(data.data)
 
 
     def get_duty_cycle(self):
         # Gets a normalized number from [-127, 127] to [1100, 1900]
-        return microseconds_to_int16(1500 + (self.currentThrust * 3.15), PCAs[self.pca_num].frequency)
+        return microseconds_to_int16(1510 + (self.currentThrust * 3.15), PCAs[self.pca_num].frequency)
 
 
     def update(self):
@@ -158,8 +147,7 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
             else:
                 return
             # print("Thruster"+str(self.thruster_num)+" pca"+str(self.pca_num)+" channel"+str(self.channel_num)+" freq"+str(PWM_FREQ)+" currentThrust"+str(self.currentThrust))
-            if self.output_type == "real":            
-                self.update_pwm()
+            if self.output_type == "real":
                 PCAs[self.pca_num].channels[self.channel_num].duty_cycle = self.get_duty_cycle()       
             elif self.output_type == "simulation":
                 msg = FloatStamped()
@@ -219,8 +207,8 @@ def initThrusters(output_type = "real", debug = False):
         for i in range(NUM_THRUSTERS):
             rospy.Subscriber("/mantaray/thruster/"+ str(i) + "/input", Float64, thrusters[i].thrusterCallback)
         for i in range(NUM_THRUSTERS):
-            init_thrusts = [k for k in range(-10, 10, 1)]
-            stopping_thrusts = [k for k in range(10, -5, -1)]
+            init_thrusts = [k for k in range(-20, 20, 1)]
+            stopping_thrusts = [k for k in range(20, 0, -1)]
             for j in init_thrusts:
                 thrusters[i].setTargetThrust(j)
                 thrusters[i].update()
@@ -269,7 +257,10 @@ if __name__ == "__main__":
         initPubs(debug=True)
         
     initThrusters(output_type, debug = True)
+    for i in range(NUM_THRUSTERS):
+        # print(thrusters[i].currentThrust)
     while not rospy.is_shutdown():
         if(updatingThrusters):
             for i in range(NUM_THRUSTERS):
                 thrusters[i].update()
+                # print(thrusters[i].currentThrust)
