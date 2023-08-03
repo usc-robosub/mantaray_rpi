@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import rospy
 import time
 from fsm import fsm
@@ -35,10 +34,7 @@ def thruster_publisher(name, fsm):
         fsm.run(100)
         for i in range(THRUSTER_COUNT):
             fs = Float64()
-            if i != 4:
-                fs.data = fsm.get_state().get_thrust_list()[i]
-            else:
-                fs.data = 0
+            fs.data = fsm.get_state().get_thrust_list()[i]
             pub[i].publish(fs)
 
         rate = rospy.Rate(10) # 10hz

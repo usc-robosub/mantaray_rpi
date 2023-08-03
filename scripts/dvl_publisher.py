@@ -10,7 +10,7 @@ dvl = WlDVL("/dev/ttyUSB0", 115200)
 def dvl_publisher_callback():
     rospy.init_node('dvl_publisher', anonymous=False)
     rospy.loginfo("dvl_publisher node started")
-    pub = rospy.Publisher('/mantaray/dvl', String, queue_size=10)
+    pub = rospy.Publisher('/mantaray/dvl', Dvl, queue_size=10)
     
     while not rospy.is_shutdown():
         data = dvl.read()

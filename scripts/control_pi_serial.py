@@ -12,7 +12,7 @@ import math
 # from mantaray_rpi.msg import FloatStamped
 import time
 from std_msgs.msg import Float64
-REVERSED_THRUSTERS = [4, 5, 6]
+REVERSED_THRUSTERS = [2, 3, 5, 6]
 VALID_VOLTAGES = [10, 12, 14, 16, 18, 20]
 
 NUM_THRUSTERS = 8
@@ -116,13 +116,11 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
         #     print("targetThrust:" + str(self.targetThrust))
         self.setTargetThrust(data.data)
 
-
     def get_duty_cycle(self):
         # Gets a normalized number from [-127, 127] to [1100, 1900]
         if self.thruster_num in REVERSED_THRUSTERS:
             return microseconds_to_int16(1510 + (-self.currentThrust * 3.15), PCAs[self.pca_num].frequency) 
         return microseconds_to_int16(1510 + (self.currentThrust * 3.15), PCAs[self.pca_num].frequency)
-
 
     def update(self):
         global updatingThrusters
@@ -159,7 +157,7 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
         elif not self.initialized:
             PCAs[self.pca_num].channels[self.channel_num].duty_cycle = self.get_duty_cycle()     
             self.initialized=True
-
+ 
 def initPcas(addresses = [0x40], freq = PWM_FREQ, debug = False):
     global PCAs
     i2c_bus = busio.I2C(board.SCL, board.SDA)
@@ -227,22 +225,9 @@ def initThrusters(output_type = "real", debug = False):
         print("Thrusters have been initialized")
 
 # def simple_thrusters_test():
-#     initPcas(addresses=[0x40, 0x41],debug = True)
-#     # print()
-#     initThrusters(debug = True)
-#     init_thrusts = [k/1000 for k in range(-1000, 1000, 20)]
-#     stopping_thrusts = [k/1000 for k in range(1000, 0, -20)]
-#     for i in range(NUM_THRUSTERS):
-#         for j in init_thrusts:
-#             thrusters[i].setTargetThrust(j)
-#             thrusters[i].update()
-#             time.sleep(0.02)
-#         time.sleep(0.5)
-#         for j in stopping_thrusts:
-#             thrusters[i].setTargetThrust(j)
-#             thrusters[i].update()
-#             time.sleep(0.02)
-#         time.sleep(5)
+    # initPcas(addresses=[0x40, 0x41],debug = True)
+    # # print()
+    # initThrusters(debug = True)
 
 if __name__ == "__main__":
     rospy.init_node("thruster_controller", anonymous=False)
@@ -260,8 +245,6 @@ if __name__ == "__main__":
         initPubs(debug=True)
         
     initThrusters(output_type, debug = True)
-    # for i in range(NUM_THRUSTERS):    
-        # print(thrusters[i].currentThrust)
     while not rospy.is_shutdown():
         if(updatingThrusters):
             for i in range(NUM_THRUSTERS):
