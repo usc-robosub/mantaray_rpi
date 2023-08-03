@@ -24,7 +24,7 @@ def thruster_publisher(name, fsm):
 
     pub = []
 
-    fsm.current_state.set_rot_target(math.radians(0),math.radians(0),math.radians(0))
+    fsm.current_state.set_rot_target(math.radians(0),math.radians(0),math.radians(180))
 
     for i in range(THRUSTER_COUNT):
         pub.append(rospy.Publisher('/' + name + '/thrusters/'+str(i)+'/input', FloatStamped, queue_size=10))
