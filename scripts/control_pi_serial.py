@@ -257,7 +257,7 @@ if __name__ == "__main__":
         initPubs(debug=True)
         
     initThrusters(output_type, debug = True)
-    for i in range(NUM_THRUSTERS):
+    # for i in range(NUM_THRUSTERS):
         # print(thrusters[i].currentThrust)
     while not rospy.is_shutdown():
         if(updatingThrusters):
