@@ -11,7 +11,7 @@ from filterpy.common import Q_discrete_white_noise
 
 IMU_TOPIC = "mantaray/imu"
 DVL_TOPIC = "mantaray/dvl"
-KF_ANGULAR = 2
+KF_ANGULAR = 60
 
 G = 9.80665
 
@@ -56,11 +56,11 @@ class fsm_pcontrol(fsm_state):
 
         # 0 is x, 1 is y, 2 is z
         self.rot_pid = [None]*3
-        self.rot_pid[0] = pid(0.05,0,0)
-        self.rot_pid[1] = pid(0.05,0,0)
-        self.rot_pid[2] = pid(0.05,0,0) #150, 0 ,0
+        self.rot_pid[0] = pid(30,0,0)
+        self.rot_pid[1] = pid(30,0,0)
+        self.rot_pid[2] = pid(30,0,0) #150, 0 ,0
         
-        self.qp_attitude_controller = QuaternionAttitudeController(0.1)
+        self.qp_attitude_controller = QuaternionAttitudeController(2)
 
         self.rot_target = [0,0,0,0]
 

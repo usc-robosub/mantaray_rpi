@@ -119,6 +119,8 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
 
     def get_duty_cycle(self):
         # Gets a normalized number from [-127, 127] to [1100, 1900]
+        if self.thruster_num in REVERSED_THRUSTERS:
+            return microseconds_to_int16(1510 + (-self.currentThrust * 3.15), PCAs[self.pca_num].frequency) 
         return microseconds_to_int16(1510 + (self.currentThrust * 3.15), PCAs[self.pca_num].frequency)
 
 
@@ -257,7 +259,7 @@ if __name__ == "__main__":
         initPubs(debug=True)
         
     initThrusters(output_type, debug = True)
-    # for i in range(NUM_THRUSTERS):
+    # for i in range(NUM_THRUSTERS):    
         # print(thrusters[i].currentThrust)
     while not rospy.is_shutdown():
         if(updatingThrusters):
