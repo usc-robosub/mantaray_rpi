@@ -208,15 +208,16 @@ def initThrusters(output_type = "real", debug = False):
         thrusters[7] = Thruster(7, 4, 1, "real")
         for i in range(NUM_THRUSTERS):
             rospy.Subscriber("/mantaray/thruster/"+ str(i) + "/input", Float64, thrusters[i].thrusterCallback)
-        for i in range(NUM_THRUSTERS):
-            init_thrusts = [k for k in range(-20, 20, 1)]
-            stopping_thrusts = [k for k in range(20, 0, -1)]
-            for j in init_thrusts:
+        init_thrusts = [k for k in range(-20, 20, 1)]
+        stopping_thrusts = [k for k in range(20, 0, -1)]
+        for j in init_thrusts:
+            for i in range(NUM_THRUSTERS):
                 thrusters[i].setTargetThrust(j)
                 thrusters[i].update()
                 time.sleep(0.02)
-            time.sleep(0.5)
-            for j in stopping_thrusts:
+        time.sleep(0.5)
+        for j in stopping_thrusts:
+            for i in range(NUM_THRUSTERS):
                 thrusters[i].setTargetThrust(j)
                 thrusters[i].update()
                 time.sleep(0.02)
