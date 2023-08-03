@@ -5,7 +5,7 @@ from std_msgs.msg import Float64, Float64MultiArray
 from mantaray_rpi.msg import FloatStamped
 NUM_THRUSTERS = 8
 enable_joys = False # Enables the Joy Sticks
-saturation = 2
+saturation = 60
 pubs = [None] * 8
 
 def remote_callback(data): # Implement soft kill switch

@@ -18,11 +18,11 @@ VALID_VOLTAGES = [10, 12, 14, 16, 18, 20]
 NUM_THRUSTERS = 8
 
 # For real
-MIN_THRUST = -2
-MAX_THRUST = 2
-MIN_ACCEL = 0.01
-MAX_ACCEL = 0.1
-DEFAULT_ACCEL = 0.03
+MIN_THRUST = -60
+MAX_THRUST = 60
+MIN_ACCEL = 1
+MAX_ACCEL = 1
+DEFAULT_ACCEL = 0.3
 UPDATE_DELAY = 20 # IN ms
 PWM_FREQ = 218
 
@@ -51,7 +51,7 @@ Thrusters mapping:
 '''
 
 def microseconds_to_int16(time, freq):
-    return time*freq*65536/1000000
+    return round(time*freq*65536/1000000)
 
 class Thruster: # Agnostic to the direction of thrust. Will need to keep track of its own thruster num
     def __init__(self, thruster_num, channel, pca_num, output_type="real"):
@@ -121,8 +121,17 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
 
     def thrusterCallback(self, data):
         # A callback for the mantaray/thruster_{num} topic
-        print(self.currentThrust)
+        if (self.currentThrust != data.data):
+            print("Thruster["+ str(self.thruster_num) + "]: currentThrust:"+str(self.currentThrust))
+            print("data.data:" + str(data.data))
+            print("targetThrust:" + str(self.targetThrust))
         self.setTargetThrust(data.data)
+
+
+    def get_duty_cycle(self):
+        # Gets a normalized number from [-127, 127] to [1100, 1900]
+        return microseconds_to_int16(1500 + (self.currentThrust * 3.15), PCAs[self.pca_num].frequency)
+
 
     def update(self):
         global updatingThrusters
@@ -151,14 +160,14 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
             # print("Thruster"+str(self.thruster_num)+" pca"+str(self.pca_num)+" channel"+str(self.channel_num)+" freq"+str(PWM_FREQ)+" currentThrust"+str(self.currentThrust))
             if self.output_type == "real":            
                 self.update_pwm()
-                PCAs[self.pca_num].channels[self.channel_num].duty_cycle = round(microseconds_to_int16(self.pwm, PCAs[self.pca_num].frequency))            
+                PCAs[self.pca_num].channels[self.channel_num].duty_cycle = self.get_duty_cycle()       
             elif self.output_type == "simulation":
                 msg = FloatStamped()
                 msg.header.stamp = rospy.Time.now()
                 msg.data = self.currentThrust * self.thrustMult
                 pubs[self.thruster_num].publish(msg)
         elif not self.initialized:
-            PCAs[self.pca_num].channels[self.channel_num].duty_cycle = round(microseconds_to_int16(self.pwm, PCAs[self.pca_num].frequency))            
+            PCAs[self.pca_num].channels[self.channel_num].duty_cycle = self.get_duty_cycle()     
             self.initialized=True
 
 def initPcas(addresses = [0x40], freq = PWM_FREQ, debug = False):
@@ -210,8 +219,8 @@ def initThrusters(output_type = "real", debug = False):
         for i in range(NUM_THRUSTERS):
             rospy.Subscriber("/mantaray/thruster/"+ str(i) + "/input", Float64, thrusters[i].thrusterCallback)
         for i in range(NUM_THRUSTERS):
-            init_thrusts = [k/1000 for k in range(-100, 100, 20)]
-            stopping_thrusts = [k/1000 for k in range(100, 0, -20)]
+            init_thrusts = [k for k in range(-10, 10, 1)]
+            stopping_thrusts = [k for k in range(10, -5, -1)]
             for j in init_thrusts:
                 thrusters[i].setTargetThrust(j)
                 thrusters[i].update()
