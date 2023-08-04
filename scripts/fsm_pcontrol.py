@@ -11,7 +11,7 @@ from filterpy.common import Q_discrete_white_noise
 
 IMU_TOPIC = "mantaray/imu"
 DVL_TOPIC = "mantaray/dvl"
-KF_ANGULAR = 20
+KF_ANGULAR = 30
 
 G = 9.80665
 
@@ -62,7 +62,7 @@ class fsm_pcontrol(fsm_state):
 
         self.depth_pid = pid(30,0,0)
 
-        self.turn_pid = pid(40,0,0) #YAW ONLY 
+        self.turn_pid = pid(10,0,0) #YAW ONLY 
         
         self.qp_attitude_controller = QuaternionAttitudeController(2)
 
@@ -243,6 +243,7 @@ class fsm_pcontrol(fsm_state):
     #     # self.kf.predict(u=self.thrust_list)
     #     self.kf.predict()
     #     self.kf.update(self.Z)
+
     def compRun(self, dt, targetGoal):
 
         A = np.array([  
@@ -335,7 +336,7 @@ class fsm_pcontrol(fsm_state):
         self.turn_pid.set_state(euler_from_quaternion(self.rot_quat)[2])
         self.turn_pid.update(targetGoal,dt) # radians
 
-        #self.depth_pid.set_state(PUT THE DEPTH READING HERE)
+        #self.depth_pid.set_state(PUT THE D EPTH READING HERE)
         #self.depth_pid.update(depth target, dt)
 
         forward_bias = 0

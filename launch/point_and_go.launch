@@ -7,16 +7,18 @@ diver time to move the thruster in the correct orientation
 -->
 
 <launch>
-  <arg name="node_start_delay" default = "1.0"/>  <!-- Starts a 30 second timer before moving -->
-  <param name="targetRadian" value="0.8"/> <!-- An estimate of where the goal post is -->
+  <arg name="get_orien_delay" default = "1.0"/>  <!-- Starts a 30 second timer before moving -->
+  <arg name="start_thrusters_delay" default = "2.0"/>  <!-- Starts a 30 second timer before moving -->
+  <param name="targetRadian" type="double" value="0.8"/> <!-- An estimate of where the goal post is -->
+  <param name="targetUpdated" type="bool" value="False"/> <!-- Whether getStartingOrientation was finished running-->
   <!-- IMU Publisher just publishes-->
   <node name="imu_publisher" pkg="mantaray_rpi" type="imu_publisher" output="screen" respawn="true"/>
-  <!-- Sets the rosparam <targetRadian> to be it's current radian -->
-  <node name="getStartingOrientation" pkg="mantaray_rpi" type="comp_main.py" output="screen" respawn="false"/>
+  <!-- Sets the rosparam <targetRadian> to be it's current radian. Also adds a delay -->
+  <node name="getStartingOrientation" pkg="mantaray_rpi" type="getInitOrientation.py" output="screen" respawn="false" launch-prefix="bash -c 'sleep $(arg get_orien_delay); $0 $@' "/>
   <!-- comp_main starts earlier than comp_thrusters_comms.py since comp_thrusters_comms.py subcribes
   to the thruster outputs after all of the thrusters are initialized-->
   <node name="mantaray_control" pkg="mantaray_rpi" type="comp_main.py" output="screen" respawn="true" /> 
   <!-- The only one that needs a delay is comp_thruster_comms.py since it has a gradual accel anyway -->
   <!-- As soon as all the thrusters init, they have to go fast. If it is too slow, give them priority-->
-  <node name="thrusters" pkg="mantaray_rpi" type="comp_thruster_comms.py" output="screen" respawn="true" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' "/> 
+  <node name="thrusters" pkg="mantaray_rpi" type="comp_thruster_comms.py" output="screen" respawn="true" launch-prefix="bash -c 'sleep $(arg start_thrusters_delay); $0 $@' "/> 
 </launch>
