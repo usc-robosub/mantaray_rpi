@@ -62,7 +62,7 @@ class fsm_pcontrol(fsm_state):
 
         self.depth_pid = pid(30,0,0)
 
-        self.turn_pid = pid(40,0,0) #YAW ONLY 
+        self.turn_pid = pid(12,0,0) #YAW ONLY 
         
         self.qp_attitude_controller = QuaternionAttitudeController(2)
 
@@ -339,12 +339,20 @@ class fsm_pcontrol(fsm_state):
         #self.depth_pid.set_state(PUT THE D EPTH READING HERE)
         #self.depth_pid.update(depth target, dt)
 
-        forward_bias = 0
-        vertical_bias = -15.1 #vertical_bias = self.depth_pid.get_output()
-        self.thrust_list[0] = -self.turn_pid.get_output() + forward_bias# 0 and 3 match and 1 and 2 match
-        self.thrust_list[1] = self.turn_pid.get_output() + forward_bias
-        self.thrust_list[2] = self.turn_pid.get_output() + forward_bias
-        self.thrust_list[3] = -self.turn_pid.get_output() + forward_bias
+        forward_bias = 17.5
+        vertical_bias = -15.3 #vertical_bias = self.depth_pid.get_output()
+        # self.thrust_list[0] = -self.turn_pid.get_output() + forward_bias# 0 and 3 match and 1 and 2 match
+        # self.thrust_list[1] = self.turn_pid.get_output() +   forward_bias
+        # self.thrust_list[2] = self.turn_pid.get_output() + forward_bias
+        # self.thrust_list[3] = -self.turn_pid.get_output() + forward_bias
+        self.thrust_list[0] = -self.turn_pid.get_output()# 0 and 3 match and 1 and 2 match
+        self.thrust_list[1] = self.turn_pid.get_output()
+        self.thrust_list[2] = forward_bias
+        self.thrust_list[3] = forward_bias - 1
+        # self.thrust_list[0] = forward_bias# 0 and 3 match and 1 and 2 match
+        # self.thrust_list[1] = forward_bias
+        # self.thrust_list[2] = forward_bias
+        # self.thrust_list[3] = forward_bias
         self.thrust_list[4] = vertical_bias - 3
         self.thrust_list[5] = vertical_bias - 3.4
         self.thrust_list[6] = vertical_bias + 3

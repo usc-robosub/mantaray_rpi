@@ -22,7 +22,7 @@ MIN_THRUST = -40
 MAX_THRUST = 40
 MIN_ACCEL = 0.2
 MAX_ACCEL = 1
-DEFAULT_ACCEL = 0.2
+DEFAULT_ACCEL = 0.5
 UPDATE_DELAY = 20 # IN ms
 PWM_FREQ = 218
 
@@ -207,14 +207,14 @@ def initThrusters(output_type = "real", debug = False):
         thrusters[5] = Thruster(5, 1, 1, "real")
         thrusters[6] = Thruster(6, 2, 1, "real")
         thrusters[7] = Thruster(7, 4, 1, "real")
-        init_thrusts = [k for k in range(-10, 10, 1)]
-        stopping_thrusts = [k for k in range(10, 0, -1)]
+        init_thrusts = [k for k in range(-15, 15, 1)]
+        stopping_thrusts = [k for k in range(15, 0, -1)]
         for j in init_thrusts:
             for i in range(NUM_THRUSTERS):
                 thrusters[i].setTargetThrust(j)
                 thrusters[i].update()
                 time.sleep(0.02)
-        time.sleep(0.5)
+        # time.sleep(0.5)
         for j in stopping_thrusts:
             for i in range(NUM_THRUSTERS):
                 thrusters[i].setTargetThrust(j)
