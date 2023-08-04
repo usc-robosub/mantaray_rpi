@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
 
-import copy
 import rospy
-import time
 from fsm import fsm
-from fsm_basic import fsm_basic
-from fsm_pcontrol import fsm_pcontrol
-from mantaray_rpi.msg import FloatStamped
-from nav_msgs.msg import Odometry
-from std_msgs.msg import String, Header, Float64
-from tf.transformations import quaternion_from_euler, euler_from_matrix
+from std_msgs.msg import Float64
+from tf.transformations import quaternion_from_euler
 import math
 
 running = True
@@ -28,7 +22,7 @@ def cv_data_callback(data):
 
 def thruster_publisher(name, fsm):
     global targetGoal
-    fsm.set_state(1)
+    fsm.set_state(2)
 
     pub = []
 
@@ -37,17 +31,18 @@ def thruster_publisher(name, fsm):
     for i in range(THRUSTER_COUNT):
         pub.append(rospy.Publisher('/' + name + '/thruster/'+str(i)+'/input', Float64, queue_size=10))
     
-    rospy.Subscriber("/mantaray/cvCorrectAngle", Float64, cv_data_callback) #TODO:WILL Implement publishers
+    # rospy.Subscriber("/mantaray/cvCorrectAngle", Float64, cv_data_callback) #TODO:WILL Implement publishers
 
     rate = rospy.Rate(10) # 10hz
 
     while not rospy.is_shutdown():
+        rospy.logdebug("targetGoal: "+str(targetGoal))
         fsm.compRun(100, targetGoal) 
         for i in range(THRUSTER_COUNT):
             fs = Float64()
             fs.data = fsm.get_state().get_thrust_list()[i]
             pub[i].publish(fs)
-            rospy.logdebug("Current thrust[" + str(i) + "]: " + str(fs.data))
+            # rospy.logdebug("Current thrust[" + str(i) + "]: " + str(fs.data))
         rate.sleep()
     
     #Stops the motors when ros shuts down
@@ -69,10 +64,9 @@ def stop(pub):
     rospy.shutdown()
 
 if __name__ == "__main__":
-    rospy.init_node('mantaray_control', anonymous=True, log_level=rospy.DEBUG) 
+    rospy.init_node('mantaray_control', anonymous=True, log_level=rospy.DEBUG)
     count = 0
 
-    rospy.logdebug("Inside of comp_main")
     # Debugging stuff
     if (rospy.get_param("targetUpdated", default=False)):
         rospy.logdebug("targetUpdated!")
@@ -82,7 +76,5 @@ if __name__ == "__main__":
 
     sub_control_state = fsm()
     rospy.logdebug("initializing thrusters in comp_main...")
-    # time.sleep(12)
-    # print("thrusters initialized")
     targetGoal = rospy.get_param("targetRadian", 0)
     thruster_publisher(SUB_NAME, sub_control_state)

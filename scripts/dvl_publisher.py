@@ -2,15 +2,18 @@
 
 from wldvl import WlDVL
 import rospy
-from mantaray_rpi.msg import Dvl
+from nav_msgs.msg import Odometry
+from tf.transformations import quaternion_from_euler
+# from mantaray_rpi.msg import Dvl
+# Based on Code from Duke Uni's robosub team (https://github.com/DukeRobotics/robosub-ros/blob/pool-test-apr-22/onboard/catkin_ws/src/data_pub/scripts/dvl_to_odom.py)
+DVL_ODOM_TOPIC = 'sensors/dvl/odom'
 
 dvl = WlDVL("/dev/ttyUSB0", 115200)
-
 
 def dvl_publisher_callback():
     rospy.init_node('dvl_publisher', anonymous=False, log_level=rospy.DEBUG)
     rospy.loginfo("dvl_publisher node started")
-    pub = rospy.Publisher('/mantaray/dvl', Dvl, queue_size=10)
+    odom_pub = rospy.Publisher(DVL_ODOM_TOPIC, Odometry, queue_size=5)
     
     while not rospy.is_shutdown():
         data = dvl.read()
@@ -35,8 +38,6 @@ def dvl_publisher_callback():
         except Exception as e:
             rospy.logdebug(e)
         
-        rate = rospy.Rate(20) # 10hz
-        rate.sleep()
 
 
 if __name__ == "__main__":
