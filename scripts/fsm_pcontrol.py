@@ -11,7 +11,7 @@ from filterpy.common import Q_discrete_white_noise
 
 IMU_TOPIC = "mantaray/imu"
 DVL_TOPIC = "mantaray/dvl"
-KF_ANGULAR = 10
+KF_ANGULAR = 20
 
 G = 9.80665
 
@@ -59,6 +59,10 @@ class fsm_pcontrol(fsm_state):
         self.rot_pid[0] = pid(10,0,0)
         self.rot_pid[1] = pid(10,0,0)
         self.rot_pid[2] = pid(10,0,0) #150, 0 ,0
+
+        self.depth_pid = pid(30,0,0)
+
+        self.turn_pid = pid(40,0,0) #YAW ONLY 
         
         self.qp_attitude_controller = QuaternionAttitudeController(2)
 
@@ -91,9 +95,6 @@ class fsm_pcontrol(fsm_state):
         
         imu_euler = euler_from_quaternion(imu_quat)
 
-        #temp
-        rot_quat = imu_quat
-
         self.Z[0:9] = np.array([imu_euler[0],
              imu_euler[1],
              imu_euler[2],
@@ -113,7 +114,7 @@ class fsm_pcontrol(fsm_state):
         #self.acc_cov = np.eye(3)*0.2
         #self.acc_cov = self.acc_cov.flatten()
         
-        
+        # rospy.loginfo(imu_euler)
 
         # only print first 3 decimals
         
@@ -122,11 +123,127 @@ class fsm_pcontrol(fsm_state):
       #  rospy.loginfo(self.kf.x[3:6])
         
 
-    def set_rot_target(self, r, p, y):
-        self.rot_target = quaternion_from_euler(r,p,y)
+    def set_rot_target(self, quat):
+        self.rot_target = quat
+
+    def get_rpy(self):
+        return euler_from_quaternion(self.rot_quat,axes='sxyz')
         
 
-    def run(self, dt):
+    # def run(self, dt):
+
+    #     A = np.array([  
+    #             [1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0, 0, 0.5*dt**2, 0, 0, 0, 0, 0],
+    #             [0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0, 0, 0.5*dt**2, 0, 0, 0, 0],
+    #             [0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0, 0, 0.5*dt**2, 0, 0, 0],
+    #             [0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0, 0, 0.5*dt**2, 0, 0],
+    #             [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0, 0, 0.5*dt**2, 0],
+    #             [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0, 0, 0.5*dt**2],
+    #             [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, dt],
+    #             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]])
+        
+    #     self.R = np.array([[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    #                       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    #                       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    #                       [0,0,0,self.ori_cov[0],self.ori_cov[1],self.ori_cov[2],0,0,0,0,0,0,0,0,0,0,0,0],
+    #                       [0,0,0,self.ori_cov[3],self.ori_cov[4],self.ori_cov[5],0,0,0,0,0,0,0,0,0,0,0,0],
+    #                       [0,0,0,self.ori_cov[6],self.ori_cov[7],self.ori_cov[8],0,0,0,0,0,0,0,0,0,0,0,0],
+    #                       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    #                       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    #                       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    #                       [0,0,0,0,0,0,0,0,0,self.ang_cov[0],self.ang_cov[1],self.ang_cov[2],0,0,0,0,0,0],
+    #                       [0,0,0,0,0,0,0,0,0,self.ang_cov[3],self.ang_cov[4],self.ang_cov[5],0,0,0,0,0,0],
+    #                       [0,0,0,0,0,0,0,0,0,self.ang_cov[6],self.ang_cov[7],self.ang_cov[8],0,0,0,0,0,0],
+    #                       [0,0,0,0,0,0,0,0,0,0,0,0,self.acc_cov[0],self.acc_cov[1],self.acc_cov[2],0,0,0],
+    #                       [0,0,0,0,0,0,0,0,0,0,0,0,self.acc_cov[3],self.acc_cov[4],self.acc_cov[5],0,0,0],
+    #                       [0,0,0,0,0,0,0,0,0,0,0,0,self.acc_cov[6],self.acc_cov[7],self.acc_cov[8],0,0,0],
+    #                       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    #                       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    #                       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]])
+
+    #     self.kf.F = A
+
+    #     B = np.array([  [0, 0, 0, 0, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0],
+    #             [0, 0, 0, 0, 0, 0, 0, 0],
+    #             [-0.5, 0.5, 0.5, -0.5, 0, 0, 0, 0],
+    #             [-0.8660251013910845, -0.8660257817756856, 0.8660253281861298, 0.8660255549809972,0.0, 0.0, 0.0, 0.0],
+    #             [0.0, 0.0, 0.0, 0.0, 1, 1, 1, 1],
+    #             [0.10219096196414795, 0.10219104224953088, -0.1021909887259633, -0.10219101548775772, 0.2, 0.2, -0.2, -0.2],
+    #             [-0.059000061803713866, 0.0589999227453273, 0.0590000154509305, -0.058999969098135, 0.25, -0.25, 0.25, -0.25],
+    #             [0.03268559890777384, -0.03268614782371279, 0.032685781879760206, -0.032535964930304084, 0, 0, 0, 0]])
+                
+        
+    #     #rot_vel = self.kf.x[9:12]
+        
+    #     rot_vel = self.Z[3:6]
+
+
+    #     rpy_vel_targets = self.qp_attitude_controller.get_angular_setpoint(self.rot_target, self.rot_quat)
+        
+    #     #rospy.loginfo(self.thrust_list) 
+        
+    #     #rospy.loginfo(rpy_vel_targets)
+
+    #     # for i in range(3):
+    #     #     self.rot_pid[i].set_state(rot_vel[i])
+    #     #     self.rot_pid[i].update(rpy_vel_targets[i], dt)
+
+    #     # self.thrust_list[0] = -self.rot_pid[2].get_output_ff(KF_ANGULAR, rpy_vel_targets[2])
+    #     # self.thrust_list[1] = self.rot_pid[2].get_output_ff(KF_ANGULAR, rpy_vel_targets[2])
+    #     # self.thrust_list[2] = self.rot_pid[2].get_output_ff(KF_ANGULAR, rpy_vel_targets[2])
+    #     # self.thrust_list[3] = -self.rot_pid[2].get_output_ff(KF_ANGULAR, rpy_vel_targets[2])
+    #     # self.thrust_list[4] = -self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) - self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1])
+    #     # self.thrust_list[5] = self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) - self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1])
+    #     # self.thrust_list[6] = -self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) +  self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1])
+    #     # self.thrust_list[7] = self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) + self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1])
+
+    #     self.turn_pid.set_state(euler_from_quaternion(self.rot_quat)[2])
+    #     self.turn_pid.update(1,dt) # radians
+
+    #     #self.depth_pid.set_state(PUT THE DEPTH READING HERE)
+    #     #self.depth_pid.update(depth target, dt)
+
+    #     forward_bias = 0
+    #     vertical_bias = -20 #vertical_bias = self.depth_pid.get_output()
+    #     self.thrust_list[0] = -self.turn_pid.get_output() + forward_bias# 0 and 3 match and 1 and 2 match
+    #     self.thrust_list[1] = self.turn_pid.get_output() + forward_bias
+    #     self.thrust_list[2] = self.turn_pid.get_output() + forward_bias
+    #     self.thrust_list[3] = -self.turn_pid.get_output() + forward_bias
+    #     self.thrust_list[4] = vertical_bias
+    #     self.thrust_list[5] = vertical_bias
+    #     self.thrust_list[6] = vertical_bias
+    #     self.thrust_list[7] = vertical_bias
+
+
+        
+
+
+    #     # self.kf.predict(u=self.thrust_list)
+    #     self.kf.predict()
+    #     self.kf.update(self.Z)
+    def compRun(self, dt, targetGoal):
 
         A = np.array([  
                 [1, 0, 0, 0, 0, 0, dt, 0, 0, 0, 0, 0, 0.5*dt**2, 0, 0, 0, 0, 0],
@@ -198,20 +315,43 @@ class fsm_pcontrol(fsm_state):
 
         rpy_vel_targets = self.qp_attitude_controller.get_angular_setpoint(self.rot_target, self.rot_quat)
         
-        rospy.loginfo(self.thrust_list) 
+        #rospy.loginfo(self.thrust_list) 
         
-        for i in range(3):
-            self.rot_pid[i].set_state(rot_vel[i])
-            self.rot_pid[i].update(rpy_vel_targets[i], dt)
+        #rospy.loginfo(rpy_vel_targets)
 
-        self.thrust_list[0] = self.rot_pid[2].get_output_ff(KF_ANGULAR, rpy_vel_targets[2])
-        self.thrust_list[1] = -self.rot_pid[2].get_output_ff(KF_ANGULAR, rpy_vel_targets[2])
-        self.thrust_list[2] = self.rot_pid[2].get_output_ff(KF_ANGULAR, rpy_vel_targets[2])
-        self.thrust_list[3] = -self.rot_pid[2].get_output_ff(KF_ANGULAR, rpy_vel_targets[2])
-        self.thrust_list[4] = -self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) + self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1])
-        self.thrust_list[5] = self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) - self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1])
-        self.thrust_list[6] = -self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) +  self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1])
-        self.thrust_list[7] = self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) - self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1])
+        # for i in range(3):
+        #     self.rot_pid[i].set_state(rot_vel[i])
+        #     self.rot_pid[i].update(rpy_vel_targets[i], dt)
+
+        # self.thrust_list[0] = -self.rot_pid[2].get_output_ff(KF_ANGULAR, rpy_vel_targets[2])
+        # self.thrust_list[1] = self.rot_pid[2].get_output_ff(KF_ANGULAR, rpy_vel_targets[2])
+        # self.thrust_list[2] = self.rot_pid[2].get_output_ff(KF_ANGULAR, rpy_vel_targets[2])
+        # self.thrust_list[3] = -self.rot_pid[2].get_output_ff(KF_ANGULAR, rpy_vel_targets[2])
+        # self.thrust_list[4] = -self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) - self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1])
+        # self.thrust_list[5] = self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) - self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1])
+        # self.thrust_list[6] = -self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) +  self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1])
+        # self.thrust_list[7] = self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) + self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1])
+
+        self.turn_pid.set_state(euler_from_quaternion(self.rot_quat)[2])
+        self.turn_pid.update(targetGoal,dt) # radians
+
+        #self.depth_pid.set_state(PUT THE DEPTH READING HERE)
+        #self.depth_pid.update(depth target, dt)
+
+        forward_bias = 0
+        vertical_bias = -15.1 #vertical_bias = self.depth_pid.get_output()
+        self.thrust_list[0] = -self.turn_pid.get_output() + forward_bias# 0 and 3 match and 1 and 2 match
+        self.thrust_list[1] = self.turn_pid.get_output() + forward_bias
+        self.thrust_list[2] = self.turn_pid.get_output() + forward_bias
+        self.thrust_list[3] = -self.turn_pid.get_output() + forward_bias
+        self.thrust_list[4] = vertical_bias - 3
+        self.thrust_list[5] = vertical_bias - 3.4
+        self.thrust_list[6] = vertical_bias + 3
+        self.thrust_list[7] = vertical_bias + 3
+
+
+        
+
 
         # self.kf.predict(u=self.thrust_list)
         self.kf.predict()

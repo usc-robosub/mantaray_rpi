@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
     
     ros::NodeHandle n;
 
-    imu_pub = n.advertise<sensor_msgs::Imu>("mantaray/imu", 1000);
+    imu_pub = n.advertise<sensor_msgs::Imu>("mantaray/imu", 1);
 
     ros::Rate loop_rate(100);
 

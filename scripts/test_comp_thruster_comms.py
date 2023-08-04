@@ -18,11 +18,11 @@ VALID_VOLTAGES = [10, 12, 14, 16, 18, 20]
 NUM_THRUSTERS = 8
 
 # For real
-MIN_THRUST = -30
-MAX_THRUST = 30
-MIN_ACCEL = 1
+MIN_THRUST = -40
+MAX_THRUST = 40
+MIN_ACCEL = 0.2
 MAX_ACCEL = 1
-DEFAULT_ACCEL = 0.3
+DEFAULT_ACCEL = 0.01
 UPDATE_DELAY = 20 # IN ms
 PWM_FREQ = 218
 
@@ -122,8 +122,8 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
     def get_duty_cycle(self):
         # Gets a normalized number from [-127, 127] to [1100, 1900]
         if self.thruster_num in REVERSED_THRUSTERS:
-            return microseconds_to_int16(1510 + (-self.currentThrust * 3.15), PCAs[self.pca_num].frequency) 
-        return microseconds_to_int16(1510 + (self.currentThrust * 3.15), PCAs[self.pca_num].frequency)
+            return microseconds_to_int16(1480 + (-self.currentThrust * 3.15), PCAs[self.pca_num].frequency) 
+        return microseconds_to_int16(1531 + (self.currentThrust * 3.15), PCAs[self.pca_num].frequency)
 
     def update(self):
         global updatingThrusters
@@ -207,8 +207,6 @@ def initThrusters(output_type = "real", debug = False):
         thrusters[5] = Thruster(5, 1, 1, "real")
         thrusters[6] = Thruster(6, 2, 1, "real")
         thrusters[7] = Thruster(7, 4, 1, "real")
-        for i in range(NUM_THRUSTERS):
-            rospy.Subscriber("/mantaray/thruster/"+ str(i) + "/input", Float64, thrusters[i].thrusterCallback)
         init_thrusts = [k for k in range(-20, 20, 1)]
         stopping_thrusts = [k for k in range(20, 0, -1)]
         for j in init_thrusts:
@@ -222,6 +220,8 @@ def initThrusters(output_type = "real", debug = False):
                 thrusters[i].setTargetThrust(j)
                 thrusters[i].update()
                 time.sleep(0.02)
+        for i in range(NUM_THRUSTERS):
+            rospy.Subscriber("/mantaray/thruster/"+ str(i) + "/input", Float64, thrusters[i].thrusterCallback)
             if debug:
                 print("Thruster " + str(i) + " has been initialized")
     if debug:

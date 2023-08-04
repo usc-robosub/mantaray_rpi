@@ -17,6 +17,9 @@ class fsm():
     def run(self, dt):
         self.current_state.run(dt)
 
+    def compRun(self, dt, target):
+        self.current_state.compRun(dt, target)
+
     def get_state(self):
         return self.current_state
     

@@ -1,0 +1,22 @@
+<!--Run the orientation_reader.py file to set the initial orientation that we want -->
+<!--
+  If possible, I want to get rid of this human part of it and just have the code find the orientation
+on its own. I think this can be done by having mantaray control save it's initial orientation before
+moving by using a delay that's only a bit slower than the start of comp_thruster_comms.py to give the
+diver time to move the thruster in the correct orientation
+-->
+
+<launch>
+  <arg name="node_start_delay" default = "1.0"/>  <!-- Starts a 30 second timer before moving -->
+  <param name="targetRadian" value="0.8"/> <!-- An estimate of where the goal post is -->
+  <!-- IMU Publisher just publishes-->
+  <node name="imu_publisher" pkg="mantaray_rpi" type="imu_publisher" output="screen" respawn="true"/>
+  <!-- Sets the rosparam <targetRadian> to be it's current radian -->
+  <node name="getStartingOrientation" pkg="mantaray_rpi" type="comp_main.py" output="screen" respawn="false"/>
+  <!-- comp_main starts earlier than comp_thrusters_comms.py since comp_thrusters_comms.py subcribes
+  to the thruster outputs after all of the thrusters are initialized-->
+  <node name="mantaray_control" pkg="mantaray_rpi" type="comp_main.py" output="screen" respawn="true" /> 
+  <!-- The only one that needs a delay is comp_thruster_comms.py since it has a gradual accel anyway -->
+  <!-- As soon as all the thrusters init, they have to go fast. If it is too slow, give them priority-->
+  <node name="thrusters" pkg="mantaray_rpi" type="comp_thruster_comms.py" output="screen" respawn="true" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' "/> 
+</launch>

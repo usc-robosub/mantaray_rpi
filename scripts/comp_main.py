@@ -22,6 +22,7 @@ THRUSTER_COUNT = 8
 def thruster_publisher(name, fsm):
     
     rospy.init_node('mantaray_control', anonymous=True) 
+    targetGoal = rospy.get_param("targetRadian", default=2)
     fsm.set_state(1)
 
     pub = []
@@ -32,9 +33,9 @@ def thruster_publisher(name, fsm):
         pub.append(rospy.Publisher('/' + name + '/thruster/'+str(i)+'/input', Float64, queue_size=10))
     
 
-    time_last = time.time()
+    # time_last = time.time()
     while not rospy.is_shutdown():
-        fsm.run(100)
+        fsm.compRun(100, targetGoal)
         for i in range(THRUSTER_COUNT):
             fs = Float64()
             fs.data = fsm.get_state().get_thrust_list()[i]
@@ -53,7 +54,7 @@ def stop():
 
 if __name__ == "__main__":
     sub_control_state = fsm()
-    print("initializing thrusters...")
-    time.sleep(12)
-    print("thrusters initialized")
+    # print("initializing thrusters...")
+    # time.sleep(12)
+    # print("thrusters initialized")
     thruster_publisher(SUB_NAME, sub_control_state)
