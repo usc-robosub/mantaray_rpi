@@ -62,7 +62,7 @@ class fsm_pcontrol(fsm_state):
 
         self.depth_pid = pid(30,0,0)
 
-        self.turn_pid = pid(10,0,0) #YAW ONLY 
+        self.turn_pid = pid(40,0,0) #YAW ONLY 
         
         self.qp_attitude_controller = QuaternionAttitudeController(2)
 
@@ -349,10 +349,10 @@ class fsm_pcontrol(fsm_state):
         self.thrust_list[5] = vertical_bias - 3.4
         self.thrust_list[6] = vertical_bias + 3
         self.thrust_list[7] = vertical_bias + 3
-
-
-        
-
+        # self.thrust_list[4] = 0
+        # self.thrust_list[5] = 0
+        # self.thrust_list[6] = 0
+        # self.thrust_list[7] = 0
 
         # self.kf.predict(u=self.thrust_list)
         self.kf.predict()

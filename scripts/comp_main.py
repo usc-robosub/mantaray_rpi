@@ -23,22 +23,11 @@ cvCorrectionP = 0.1
 def cv_data_callback(data):
     # Assumes data is a Float64
     # This is added to <targetGoal> to make the sub face towards the goal post
+    global targetGoal
     targetGoal += cvCorrectionP * data.data
 
 def thruster_publisher(name, fsm):
     global targetGoal
-    rospy.init_node('mantaray_control', anonymous=True) 
-    count = 0
-    while (rospy.get_param("targetUpdated", default=False) or count < 100):
-        targetGoal = rospy.get_param("targetRadian", default=2)
-        time.sleep(0.1)
-
-    # Debugging stuff
-    if (rospy.get_param("targetUpdated", default=False)):
-        print("targetUpdated!")
-    else:
-        print("Target not updated!")
-
     fsm.set_state(1)
 
     pub = []
@@ -58,10 +47,11 @@ def thruster_publisher(name, fsm):
             fs = Float64()
             fs.data = fsm.get_state().get_thrust_list()[i]
             pub[i].publish(fs)
+            rospy.logdebug("Current thrust[" + str(i) + "]: " + str(fs.data))
         rate.sleep()
     
     #Stops the motors when ros shuts down
-    stop_motors()
+    stop_motors(pub)
 
 def stop_motors(pub):
     for i in range(THRUSTER_COUNT):
@@ -79,8 +69,20 @@ def stop(pub):
     rospy.shutdown()
 
 if __name__ == "__main__":
+    rospy.init_node('mantaray_control', anonymous=True, log_level=rospy.DEBUG) 
+    count = 0
+
+    rospy.logdebug("Inside of comp_main")
+    # Debugging stuff
+    if (rospy.get_param("targetUpdated", default=False)):
+        rospy.logdebug("targetUpdated!")
+        rospy.logdebug("New target: " + str(targetGoal))
+    else:
+        rospy.logdebug("Target not updated!")
+
     sub_control_state = fsm()
-    # print("initializing thrusters...")
+    rospy.logdebug("initializing thrusters in comp_main...")
     # time.sleep(12)
     # print("thrusters initialized")
+    targetGoal = rospy.get_param("targetRadian", 0)
     thruster_publisher(SUB_NAME, sub_control_state)

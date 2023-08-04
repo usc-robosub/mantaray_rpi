@@ -207,8 +207,8 @@ def initThrusters(output_type = "real", debug = False):
         thrusters[5] = Thruster(5, 1, 1, "real")
         thrusters[6] = Thruster(6, 2, 1, "real")
         thrusters[7] = Thruster(7, 4, 1, "real")
-        init_thrusts = [k for k in range(-20, 20, 1)]
-        stopping_thrusts = [k for k in range(20, 0, -1)]
+        init_thrusts = [k for k in range(-10, 10, 1)]
+        stopping_thrusts = [k for k in range(10, 0, -1)]
         for j in init_thrusts:
             for i in range(NUM_THRUSTERS):
                 thrusters[i].setTargetThrust(j)
