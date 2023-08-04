@@ -36,7 +36,7 @@ def thruster_publisher(name, fsm):
     rate = rospy.Rate(10) # 10hz
 
     while not rospy.is_shutdown():
-        rospy.logdebug("targetGoal: "+str(targetGoal))
+        # rospy.logdebug("targetGoal: "+str(targetGoal))
         fsm.compRun(100, targetGoal) 
         for i in range(THRUSTER_COUNT):
             fs = Float64()

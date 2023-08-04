@@ -4,6 +4,7 @@ import rospy
 from std_msgs.msg import Header
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Quaternion, Vector3
+from tf.transformations import euler_from_quaternion
 
 import struct
 import math
@@ -94,7 +95,8 @@ class MySerial(serial.Serial):
         return bytes(line)
 
 def talker():
-    rospy.init_node('imuTalker', anonymous=True)
+    PI = 3.14
+    rospy.init_node('imuTalker', anonymous=True, log_level=rospy.INFO)
     pub = rospy.Publisher('mantaray/imu', Imu, queue_size=10)
     rate = rospy.Rate(100) # 10hz
 
@@ -102,7 +104,7 @@ def talker():
                         rtscts=1)
     
     gotQuat = False
-    gotVelocity = False
+    gotGyro = False
     gotEarth = False
 
     quat = Quaternion()
@@ -114,20 +116,20 @@ def talker():
         if (data != []):
             if(data[0][1] == "/quaternion"):
                 quat = Quaternion()
-                quat.x = data[0][2] # Angular velocity
-                quat.y = data[0][3]
-                quat.z = data[0][4]
+                quat.z = data[0][2] # Angular velocity
+                quat.x = data[0][3]
+                quat.y = data[0][4]
                 quat.w = data[0][5] # Linear acceleration
                 gotQuat = True
             if(data[0][1] == "/earth"):
-                earth.x = data[0][2] # Angular velocity
-                earth.y = data[0][3]
-                earth.z = data[0][4]
+                earth.z = data[0][2] # Angular velocity
+                earth.x = data[0][3]
+                earth.y = data[0][4]
                 gotEarth = True
             if(data[0][1] == "/sensors"):
-                gyro.x = data[0][2] # Angular velocity
-                gyro.y = data[0][3]
-                gyro.z = data[0][4]
+                gyro.z = data[0][2] # Angular velocity
+                gyro.x = data[0][3]
+                gyro.y = data[0][4]
                 gotGyro = True
 
             if(gotQuat and gotEarth and gotGyro):
@@ -136,12 +138,18 @@ def talker():
                 imu_msg.angular_velocity = gyro
                 imu_msg.linear_acceleration = earth
                 pub.publish(imu_msg)
+                gotQuat = False
+                gotGyro = False
+                gotEarth = False
+                rospy.logdebug(euler_from_quaternion([quat.x, quat.y, quat.z, quat.w]))
                 
 
         
 
 if __name__ == '__main__':
     try:
+        print("able to talk")
         talker()
-    except rospy.ROSInterruptException:
-        pass
+
+    except rospy.ROSInterruptException as e:
+        print(e)
