@@ -54,7 +54,7 @@ def microseconds_to_int16(time, freq):
     return round(time*freq*65536/1000000)
 
 class Thruster: # Agnostic to the direction of thrust. Will need to keep track of its own thruster num
-    def __init__(self, thruster_num, channel, pca_num, output_type="real"):
+    def __init__(self, thruster_num, channel, pca_num, output_type="real", limitAccel=True):
         self.thruster_num = thruster_num
         self.channel_num = channel
         self.pca_num = pca_num
@@ -65,6 +65,7 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
         self.running = True
         self.initialized = False
         self.output_type = output_type
+        self.limitAccel=limitAccel
 
         self.thrustMult = SIM_MULT if self.output_type == "simulation" else 1
 
@@ -81,11 +82,7 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
             target = MAX_THRUST
         if (target == self.targetThrust):
             return
-        else: # MIN accel doesn't apply to here
-            if (self.targetThrust-target > MAX_ACCEL):
-                target = self.targetThrust-MAX_ACCEL
-            elif (target-self.targetThrust > MAX_ACCEL):
-                target = MAX_ACCEL+self.targetThrust
+        else:
             self.targetThrust = target
         updatingThrusters = True
     
@@ -140,11 +137,19 @@ class Thruster: # Agnostic to the direction of thrust. Will need to keep track o
             if self.targetThrust != self.currentThrust:
                 if (self.targetThrust > self.currentThrust):
                     # print("previous self.currentThrust of thruster " + str(self.thruster_num) +": " + str(self.currentThrust))
-                    self.currentThrust+=min(self.targetThrust-self.currentThrust, self.accel)
+                    if (self.limitAccel):
+                        self.currentThrust+=min(self.targetThrust-self.currentThrust, self.accel)
+                    else:
+                        # rospy.logdebug("Didn't limit accel")
+                        self.currentThrust = self.targetThrust
                     # print("New self.currentThrust of thruster " + str(self.thruster_num) +": " + str(self.currentThrust))
                 elif (self.targetThrust < self.currentThrust):
                     # print("previous self.currentThrust of thruster " + str(self.thruster_num) +": " + str(self.currentThrust))
-                    self.currentThrust-=min(self.currentThrust-self.targetThrust, self.accel)
+                    if (self.limitAccel):
+                        self.currentThrust-=min(self.currentThrust-self.targetThrust, self.accel)
+                    else:
+                        # rospy.logdebug("Didn't limit accel")
+                        self.currentThrust = self.targetThrust
                     # print("New self.currentThrust of thruster " + str(self.thruster_num) +": " + str(self.currentThrust))
                 updatingThrusters=True
             else:
@@ -199,14 +204,14 @@ def initThrusters(output_type = "real", debug = False):
         for i in range(NUM_THRUSTERS):
             rospy.Subscriber("/mantaray/thrusters/"+ str(i) + "/input", Float64, thrusters[i].thrusterCallback)
     elif (output_type == "real"):
-        thrusters[0] = Thruster(0, 2, 0, "real")
-        thrusters[1] = Thruster(1, 1, 0, "real")
-        thrusters[2] = Thruster(2, 4, 0, "real")
-        thrusters[3] = Thruster(3, 3, 0, "real")
-        thrusters[4] = Thruster(4, 3, 1, "real")
-        thrusters[5] = Thruster(5, 1, 1, "real")
-        thrusters[6] = Thruster(6, 2, 1, "real")
-        thrusters[7] = Thruster(7, 4, 1, "real")
+        thrusters[0] = Thruster(0, 2, 0, "real", limitAccel=False)
+        thrusters[1] = Thruster(1, 1, 0, "real", limitAccel=False)
+        thrusters[2] = Thruster(2, 4, 0, "real", limitAccel=False)
+        thrusters[3] = Thruster(3, 3, 0, "real", limitAccel=False)
+        thrusters[4] = Thruster(4, 3, 1, "real", limitAccel=True)
+        thrusters[5] = Thruster(5, 1, 1, "real", limitAccel=True)
+        thrusters[6] = Thruster(6, 2, 1, "real", limitAccel=True)
+        thrusters[7] = Thruster(7, 4, 1, "real", limitAccel=True)
         init_thrusts = [k for k in range(-15, 15, 1)]
         stopping_thrusts = [k for k in range(15, 0, -1)]
         for j in init_thrusts:
@@ -233,7 +238,7 @@ def initThrusters(output_type = "real", debug = False):
     # initThrusters(debug = True)
 
 if __name__ == "__main__":
-    rospy.init_node("thruster_controller", anonymous=False)
+    rospy.init_node("thruster_controller", anonymous=False, log_level=rospy.DEBUG)
     output_type = rospy.get_param("/output_type", default="real")
     if (output_type == "real"):
         import busio

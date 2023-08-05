@@ -33,7 +33,7 @@ def thruster_publisher(name, fsm):
     
     # rospy.Subscriber("/mantaray/cvCorrectAngle", Float64, cv_data_callback) #TODO:WILL Implement publishers
 
-    rate = rospy.Rate(10) # 10hz
+    rate = rospy.Rate(1) # 10hz
 
     while not rospy.is_shutdown():
         # rospy.logdebug("targetGoal: "+str(targetGoal))
