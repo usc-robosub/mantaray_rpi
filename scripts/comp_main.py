@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import rospy
-from fsm import fsm
+# from fsm import fsm
 from std_msgs.msg import Float64
 from tf.transformations import quaternion_from_euler
 import math
@@ -22,11 +22,11 @@ def cv_data_callback(data):
 
 def thruster_publisher(name, fsm):
     global targetGoal
-    fsm.set_state(2)
+    # fsm.set_state(2)
 
     pub = []
 
-    fsm.current_state.set_rot_target(quaternion_from_euler(math.radians(0),math.radians(0),math.radians(45)))
+    # fsm.current_state.set_rot_target(quaternion_from_euler(math.radians(0),math.radians(0),math.radians(45)))
 
     for i in range(THRUSTER_COUNT):
         pub.append(rospy.Publisher('/' + name + '/thruster/'+str(i)+'/input', Float64, queue_size=10))
