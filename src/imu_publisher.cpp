@@ -1,4 +1,5 @@
 #include "ros/ros.h"
+#include <ros/console.h>
 #include "sensor_msgs/Imu.h"
 #include <iostream>
 #include "serialib.h"
@@ -18,8 +19,6 @@ float accel[3];
 float mag[3];
 float baro = 0;
 float earth[3];
-
-
 
 void serial_imu_callback() {
     // Process each received byte
@@ -91,6 +90,25 @@ void ngimuEarthAccelerationCallback(const NgimuEarthAcceleration ngimuEarthAccel
     earth[2] = ngimuEarthAcceleration.z;
 }
 
+void simCallback(const sensor_msgs::Imu::ConstPtr& msg) {
+    ROS_DEBUG("Inside simCallback");
+    quat[0] = msg->orientation.w;
+    quat[1] = msg->orientation.x;
+    quat[2] = msg->orientation.y;
+    quat[3] = msg->orientation.z;
+    ROS_DEBUG("Created quats");
+
+    gyro[0] = msg->angular_velocity.x;
+    gyro[1] = msg->angular_velocity.y;
+    gyro[2] = msg->angular_velocity.z;
+
+    ROS_DEBUG("Created gyro");
+    earth[0] = msg->linear_acceleration.x;
+    earth[1] = msg->linear_acceleration.y;
+    earth[2] = msg->linear_acceleration.z;
+    ROS_DEBUG("Inside accel");
+}
+
 int main(int argc, char **argv) {
 
     // Connection to serial port
@@ -99,22 +117,38 @@ int main(int argc, char **argv) {
 
     
     ros::NodeHandle n;
+    ROS_DEBUG("Inside of IMU_publisher");
+
+    // Get Relevant ROS Params
+    bool simulation = false;
+
+    ROS_WARN_COND(!n.getParam("/simulation", simulation), "\'simulation\' wasn't defined as a param!");
 
     imu_pub = n.advertise<sensor_msgs::Imu>("mantaray/imu", 1);
 
     ros::Rate loop_rate(100);
+    ros::Subscriber sub; // For some reason sub needs to be declared out here or else the conditional statement
+    // won't work
 
-    // Initialise NGIMU receive module
-    NgimuReceiveInitialise();
+    if (simulation) {
+        ROS_INFO("Creating subscriber");
+        sub = n.subscribe("/mantaray/sim_imu", 10, simCallback);
+    }
 
-    // Assign NGIMU receive callback functions
-    NgimuReceiveSetReceiveErrorCallback(ngimuReceiveErrorCallback);
-    NgimuReceiveSetSensorsCallback(ngimuSensorsCallback);
-    NgimuReceiveSetQuaternionCallback(ngimuQuaternionCallback);
-    NgimuReceiveSetEulerCallback(ngimuEulerCallback);
-    NgimuReceiveSetEarthAccelerationCallback(ngimuEarthAccelerationCallback);
+    else {
+        ROS_INFO("Publishing from real IMU");
+        // Initialise NGIMU receive module
+        NgimuReceiveInitialise();
 
-    std::thread t1 (serial_imu_callback);
+        // Assign NGIMU receive callback functions
+        NgimuReceiveSetReceiveErrorCallback(ngimuReceiveErrorCallback);
+        NgimuReceiveSetSensorsCallback(ngimuSensorsCallback);
+        NgimuReceiveSetQuaternionCallback(ngimuQuaternionCallback);
+        NgimuReceiveSetEulerCallback(ngimuEulerCallback);
+        NgimuReceiveSetEarthAccelerationCallback(ngimuEarthAccelerationCallback);
+
+        std::thread t1 (serial_imu_callback);
+    }
 
     
     while(ros::ok()) {

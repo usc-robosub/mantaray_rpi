@@ -1,0 +1,35 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/kojiroy/auv_ws/devel/include/**",
+        "/opt/ros/melodic/include/**",
+        "/home/kojiroy/auv_ws/src/auv_utils/include/**",
+        "/home/kojiroy/catkin_ws/src/beginner_tutorials/include/**",
+        "/home/kojiroy/auv_ws/src/jetson_dev/computer/competition/include/**",
+        "/home/kojiroy/auv_ws/src/jetson_dev/control/include/**",
+        "/home/kojiroy/auv_ws/src/jetson_dev/guidance/include/**",
+        "/home/kojiroy/auv_ws/src/jetson_dev/jetson/include/**",
+        "/home/kojiroy/catkin_ws/src/learning_tf/include/**",
+        "/home/kojiroy/auv_ws/src/mantaray_rpi/include/**",
+        "/home/kojiroy/auv_ws/src/mantaray_xavier/include/**",
+        "/home/kojiroy/auv_ws/src/misc/include/**",
+        "/home/kojiroy/auv_ws/src/my_package/include/**",
+        "/home/kojiroy/auv_ws/src/jetson_dev/navigation/include/**",
+        "/home/kojiroy/auv_ws/src/thruster/include/**",
+        "/home/kojiroy/auv_ws/src/jetson_dev/computer/wet_tests/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
