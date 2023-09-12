@@ -4,5 +4,5 @@
   <node name="imu_publisher" pkg="mantaray_rpi" type="imu_publisher" output="screen" respawn="true"/>
   <node name="mantaray_control" pkg="mantaray_rpi" type="main.py" output="screen" respawn="true"/> 
   <!--<node name="dvl_publisher" pkg="mantaray_rpi" type="dvl_publisher.py" output="screen" respawn="true"/>-->
-  <node name="thrusters" pkg="mantaray_rpi" type="control_pi_serial.py" output="screen" respawn="true"/>
+  <!--<node name="thrusters" pkg="mantaray_rpi" type="control_pi_serial.py" output="screen" respawn="true"/>-->
 </launch>

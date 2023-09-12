@@ -2,3 +2,5 @@ roslibpy
 keyboard
 filterpy
 numpy
+pandas
+adafruit-circuitpython-pca9685
