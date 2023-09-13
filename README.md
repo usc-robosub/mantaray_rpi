@@ -3,6 +3,13 @@ ROS package that handles control on the Raspberry Pi.
 
 ## Installation
 
+Requires the robot_localization ROS package which can be installed with
+
+```
+sudo apt-get install ros-melodic-robot-localization
+```
+
+
 ```
 cd ~/catkin_ws/src
 git clone git@github.com:USCAUVTeam/mantaray_rpi.git
