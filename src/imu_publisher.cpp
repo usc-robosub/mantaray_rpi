@@ -155,6 +155,18 @@ int main(int argc, char **argv) {
         
         sensor_msgs::Imu msg;
         msg.header.stamp = ros::Time::now();
+        msg.header.frame_id = "base_link";
+
+        msg.orientation_covariance[0] = 0.0025;
+        msg.orientation_covariance[4] = 0.0025;
+        msg.orientation_covariance[8] = 0.0025;
+        msg.angular_velocity_covariance[0] = 0.0025;
+        msg.angular_velocity_covariance[4] = 0.0025;
+        msg.angular_velocity_covariance[8] = 0.0025;
+        msg.linear_acceleration_covariance[0] = 0.0025;
+        msg.linear_acceleration_covariance[4] = 0.0025;
+        msg.linear_acceleration_covariance[8] = 0.0025;
+
 
         msg.orientation.w = quat[0];
         msg.orientation.x = quat[1];

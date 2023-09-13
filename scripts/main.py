@@ -31,8 +31,7 @@ def thruster_publisher(name, fsm):
     for i in range(THRUSTER_COUNT):
         pub.append(rospy.Publisher('/' + name + '/thruster/'+str(i)+'/input', Float64, queue_size=10))
     
-
-    time_last = time.time()
+    
     while not rospy.is_shutdown():
         fsm.run(100)
         for i in range(THRUSTER_COUNT):

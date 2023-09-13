@@ -1,5 +1,16 @@
 <launch>
   <!-- This launch file is for mantaray to move autonomously -->
+  <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
+    <rosparam command="load" file="$(find mantaray_rpi)/params/ekf_params.yaml" />
+
+   <!--  Placeholder for output topic remapping
+     You either remap on this node, the node that takes in the data, or both!
+     <remap from="odometry/filtered" to=""/>
+     <remap from="accel/filtered" to=""/>
+     -->
+
+  </node>
+
   <param name="simulation" type="bool" value="True"/>
   <node name="imu_publisher" pkg="mantaray_rpi" type="imu_publisher" output="screen" respawn="true"/>
   <node name="mantaray_control" pkg="mantaray_rpi" type="main.py" output="screen" respawn="true"/> 
