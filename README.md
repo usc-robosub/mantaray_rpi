@@ -9,6 +9,7 @@ Requires the robot_localization ROS package which can be installed with
 sudo apt-get install ros-melodic-robot-localization
 ```
 
+To install our mantaray library:
 
 ```
 cd ~/catkin_ws/src
