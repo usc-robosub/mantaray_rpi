@@ -1,6 +1,6 @@
 class pid():
     def __init__(self, kP, kI, kD, integral_bound = 300):
-        self.kP = kP
+self.kP = kP
         self.kI = kI
         self.kD = kD
         self.value = 0
