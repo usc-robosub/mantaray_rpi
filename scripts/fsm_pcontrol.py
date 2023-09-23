@@ -1,3 +1,5 @@
+#!/usr/bin/env python  
+
 import rospy
 import numpy as np
 from nav_msgs.msg import Odometry
@@ -70,8 +72,7 @@ class fsm_pcontrol(fsm_state):
         self.thrust_list[6] = -self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) +  self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1])
         self.thrust_list[7] = self.rot_pid[0].get_output_ff(KF_ANGULAR, rpy_vel_targets[0]) + self.rot_pid[1].get_output_ff(KF_ANGULAR, rpy_vel_targets[1])
 
-        self.turn_pid.set_state(euler_from_quaternion(self.rot_quat)[2])
-        self.turn_pid.update(1,dt) # radians
+        
 
 
     def enter(self):

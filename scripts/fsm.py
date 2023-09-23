@@ -1,11 +1,10 @@
 from fsm_state import fsm_state
 from fsm_basic import fsm_basic
-from fsm_simple_pid import fsm_simple_pid
 from fsm_pcontrol import fsm_pcontrol
 
 class fsm(): 
     def __init__(self):
-        self.state_list = [fsm_basic(), fsm_pcontrol(), fsm_simple_pid()]
+        self.state_list = [fsm_basic(), fsm_pcontrol()]
         self.current_state = self.state_list[0]
     
     def get_next_state(self):
