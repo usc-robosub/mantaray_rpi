@@ -1,0 +1,13 @@
+<!--
+The controller is going to be black boxed.
+As a controller, this takes in how many newtons to move each thruster and this controller either
+sends the appropriate PWM signal to the PCA boards or it sends a FloatStamped message to the
+simulation to move it there. 
+-->
+
+<launch>
+  <arg name="simulation" default = "True"/>  <!-- Whether this is running in a simulation or IRL -->
+  <arg name="log" default = "False"/>  <!-- Whether to log controller output using ROSBags -->
+  <arg name="teensy" default = "False"/> <!-- Whether the Teensy MCU is connected/simulated -->
+    
+</launch>
