@@ -1,0 +1,4 @@
+<launch>
+    <node name="temp_readDVL" pkg="mantaray_rpi" type="temp_readDVL.cpp" output="screen" respawn="true"/>
+
+</launch>

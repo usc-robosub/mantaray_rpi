@@ -90,6 +90,15 @@ class DVLBase {
             self.oldString = oldString*/
             return rawData;
         }
+        std::string getPack() {
+            std:string rawData = "false";
+            //smth
+            return rawData;
+        }
+
+        vector<float> read() {
+            //some bs todo idk
+        }
 
 };
 //create a parser
