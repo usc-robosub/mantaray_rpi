@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "include.h"
 
 class FSM_Base {
 
@@ -12,6 +13,7 @@ class FSM_Base {
 
     private:
     std::string name = "Base";
+    double thruster_values[THRUSTER_COUNT] = {0.0};
 
 
 };
