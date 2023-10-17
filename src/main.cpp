@@ -1,4 +1,5 @@
 #include "include.h"
+#include "fsm.h"
 
 ros::Publisher* thruster_pubs;
 

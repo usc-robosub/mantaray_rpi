@@ -1,5 +1,4 @@
 #pragma once
-
 #include "include.h"
 
 class FSM_Passive : public FSM_Base
