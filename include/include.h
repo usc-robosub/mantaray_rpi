@@ -13,4 +13,3 @@
 
 #define THRUSTER_COUNT 8
 #define THRUSTER_INIT_DELAY 0
-const std::string SUB_NAME = "mantaray";
