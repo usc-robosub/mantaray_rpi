@@ -149,7 +149,7 @@ pose0_queue_size: 5
 pose0_rejection_threshold: 2  # Note the difference in parameter name
 pose0_nodelay: false
 
-twist0: example/twist
+twist0: dvl
 twist0_config: [false, false, false,
                 false, false, false,
                 true,  true,  true,
