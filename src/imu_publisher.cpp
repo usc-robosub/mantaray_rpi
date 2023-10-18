@@ -124,19 +124,19 @@ int main(int argc, char **argv) {
 
     ROS_WARN_COND(!n.getParam("/simulation", simulation), "\'simulation\' wasn't defined as a param!");
 
-    imu_pub = n.advertise<sensor_msgs::Imu>("mantaray/imu", 1);
+    imu_pub = n.advertise<sensor_msgs::Imu>("imu", 1);
 
     ros::Rate loop_rate(100);
     ros::Subscriber sub; // For some reason sub needs to be declared out here or else the conditional statement
     // won't work
 
     if (simulation) {
-        ROS_INFO("Creating subscriber");
-        sub = n.subscribe("/mantaray/sim_imu", 10, simCallback);
+        ROS_INFO("Simulation IMU - Subscribing to /sim_imu");
+        sub = n.subscribe("/sim_imu", 10, simCallback);
     }
 
     else {
-        ROS_INFO("Publishing from real IMU");
+        ROS_INFO("Using NGIMU IMU");
         // Initialise NGIMU receive module
         NgimuReceiveInitialise();
 

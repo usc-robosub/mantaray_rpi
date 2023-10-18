@@ -3,10 +3,11 @@ ROS package that handles control on the Raspberry Pi.
 
 ## Installation
 
-Requires the robot_localization ROS package which can be installed with
+Install the required ROS packages
 
 ```
 sudo apt-get install ros-melodic-robot-localization
+sudo apt-get install ros-melodic-pid
 ```
 
 To install our mantaray library:
@@ -28,3 +29,5 @@ roslaunch mantaray_rpi mantaray.launch
 * [serialib](https://github.com/imabot2/serialib) - Cross-platform lightweight serial library for C++
 * [NGIMU C++ Example](https://github.com/xioTechnologies/NGIMU-C-Cpp-Example) - A wrapper for decoding NGIMU messages
 * [OSC99](https://github.com/xioTechnologies/OSC99) - Used for decoding OSC packets
+* [robot-localization](https://docs.ros.org/en/noetic/api/robot_localization/html/index.html)
+* [pid](https://wiki.ros.org/pid)
