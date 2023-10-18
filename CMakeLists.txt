@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   geometry_msgs
+  nav_msgs
   message_generation
 )
 
@@ -76,6 +77,7 @@ generate_messages(
   DEPENDENCIES
   std_msgs  # Or other packages containing msgs
   geometry_msgs
+  nav_msgs
 )
 
 ################################################
@@ -110,7 +112,7 @@ generate_messages(
 catkin_package(
 INCLUDE_DIRS include
 LIBRARIES mantaray_rpi
-  CATKIN_DEPENDS roscpp rospy
+  CATKIN_DEPENDS roscpp rospy std_msgs nav_msgs geometry_msgs
 #  DEPENDS system_lib
 )
 
