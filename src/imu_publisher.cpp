@@ -131,12 +131,12 @@ int main(int argc, char **argv) {
     // won't work
 
     if (simulation) {
-        ROS_INFO("Creating subscriber");
+        ROS_INFO("Simulation IMU - Subscribing to /sim_imu");
         sub = n.subscribe("/sim_imu", 10, simCallback);
     }
 
     else {
-        ROS_INFO("Publishing from real IMU");
+        ROS_INFO("Using NGIMU IMU");
         // Initialise NGIMU receive module
         NgimuReceiveInitialise();
 
