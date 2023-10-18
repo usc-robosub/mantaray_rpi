@@ -5,6 +5,8 @@ project(mantaray_rpi)
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
 
+set(Eigen3_DIR "/usr/lib/cmake/eigen3")
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -15,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   nav_msgs
   message_generation
+  Eigen3 REQUIRED NO_MODULE
 )
 
 ## System dependencies are found with CMake's conventions
@@ -125,6 +128,7 @@ LIBRARIES mantaray_rpi
 include_directories(
 include
   ${catkin_INCLUDE_DIRS}
+  ${EIGEN_INCLUDE_DIR}
   include/Osc99
   include/serialib
   
@@ -148,14 +152,12 @@ src/Osc99/OscSlip.c)
 set(SOURCES src/fsm_base.cpp
 src/fsm.cpp
 src/fsm_pcontrol.cpp
-src/fsm_passive.cpp)
+src/fsm_passive.cpp
+src/fsm_lqr.cpp)
 
 add_library(osc99 SHARED ${OSC99_SOURCES})
-
 add_library(ngimurecieve SHARED src/NgimuReceive.c)
-
 add_library(serialib SHARED src/serialib/serialib.cpp)
-
 add_library(mantaray_rpi SHARED ${SOURCES})
 
 ## Add cmake target dependencies of the library
@@ -190,7 +192,8 @@ target_link_libraries(imu_publisher
 
 target_link_libraries(main
   ${catkin_LIBRARIES}
-  mantaray_rpi)
+  mantaray_rpi
+  Eigen3::Eigen)
 
 #############
 ## Install ##
