@@ -12,6 +12,7 @@
 #include "fsm_base.h"
 #include "fsm_pcontrol.h"
 #include "fsm_passive.h"
+#include "fsm_lqr.h"
 
 /**
  * @brief The FSM class for implementing a finite state machine.
