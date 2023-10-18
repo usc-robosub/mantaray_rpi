@@ -10,6 +10,11 @@ sudo apt-get install ros-melodic-robot-localization
 sudo apt-get install ros-melodic-pid
 ```
 
+Install Eigen3
+```
+sudo apt-get install libeigen3-dev
+```
+
 To install our mantaray library:
 
 ```
@@ -31,3 +36,4 @@ roslaunch mantaray_rpi mantaray.launch
 * [OSC99](https://github.com/xioTechnologies/OSC99) - Used for decoding OSC packets
 * [robot-localization](https://docs.ros.org/en/noetic/api/robot_localization/html/index.html)
 * [pid](https://wiki.ros.org/pid)
+* [libeigen](https://gitlab.com/libeigen/eigen)
