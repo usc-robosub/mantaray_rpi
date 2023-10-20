@@ -17,8 +17,11 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   nav_msgs
   message_generation
-  Eigen3 REQUIRED NO_MODULE
 )
+
+find_package(Eigen3 REQUIRED)
+find_package(ct_optcon REQUIRED)
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -128,7 +131,8 @@ LIBRARIES mantaray_rpi
 include_directories(
 include
   ${catkin_INCLUDE_DIRS}
-  ${EIGEN_INCLUDE_DIR}
+  ${EIGEN3_INCLUDE_DIR}
+  ${ct_optcon_INCLUDE_DIRS}
   include/Osc99
   include/serialib
   
@@ -193,7 +197,9 @@ target_link_libraries(imu_publisher
 target_link_libraries(main
   ${catkin_LIBRARIES}
   mantaray_rpi
-  Eigen3::Eigen)
+  Eigen3::Eigen
+  ct_optcon
+)
 
 #############
 ## Install ##
