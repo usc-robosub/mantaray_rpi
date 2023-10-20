@@ -66,6 +66,11 @@ void FSM_LQR::exit(){
 
 void FSM_LQR::run(int dt){
     Eigen::Matrix <double, STATE_DIM, 1> robot_state;
+    for (int i = 0; i < STATE_DIM; i++) {
+        robot_state << robotState[i];
+    }
+    this->getControlOutput(robot_state, this->setpoint);
+    this->thruster_values = this->U_.data();
 }
 
 void FSM_LQR::computeThrustCoefficients() {
@@ -87,7 +92,7 @@ void FSM_LQR::computeLinearizedInputMatrix() {
     B_.block<3, 8>(9, 0) = auvParams_.inertia.inverse() * thrustCoeffs_.block<3, 8>(3, 0);     // Moment contributions
 }
 
-Eigen::Matrix <double, CONTROL_DIM, 1> FSM_LQR::getControlOutput(Eigen::Matrix <double, STATE_DIM, 1> state, Eigen::Matrix <double, STATE_DIM, 1> setpoint, double dt){
+Eigen::Matrix <double, CONTROL_DIM, 1> FSM_LQR::getControlOutput(Eigen::Matrix <double, STATE_DIM, 1> state, Eigen::Matrix <double, STATE_DIM, 1> setpoint){
     this->error_ = state - setpoint;
 
     this->lqrSolver_.compute(this->Q_, this->R_, this->A_, this->B_, this->K_, true); // R is diagonal so set flag to true

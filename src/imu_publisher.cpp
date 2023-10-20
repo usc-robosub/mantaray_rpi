@@ -24,8 +24,8 @@ void serial_imu_callback() {
     // Process each received byte
     serialib serial;
     serial.openDevice(PORT, 115200);
+    std::cout << "yo" << std::endl;
     while(true) {
-
         while (serial.available() > 0) {
             try
             {
@@ -112,9 +112,18 @@ void simCallback(const sensor_msgs::Imu::ConstPtr& msg) {
 int main(int argc, char **argv) {
 
     // Connection to serial port
+
+    // Initialise NGIMU receive module
+        
+    NgimuReceiveInitialise();
+    // Assign NGIMU receive callback functions
+    NgimuReceiveSetReceiveErrorCallback(ngimuReceiveErrorCallback);
+    NgimuReceiveSetSensorsCallback(ngimuSensorsCallback);
+    NgimuReceiveSetQuaternionCallback(ngimuQuaternionCallback);
+    NgimuReceiveSetEulerCallback(ngimuEulerCallback);
+    NgimuReceiveSetEarthAccelerationCallback(ngimuEarthAccelerationCallback);
     
     ros::init(argc, argv, "imu_publisher");
-
     
     ros::NodeHandle n;
     ROS_DEBUG("Inside of IMU_publisher");
@@ -126,28 +135,18 @@ int main(int argc, char **argv) {
 
     imu_pub = n.advertise<sensor_msgs::Imu>("imu", 1);
 
-    ros::Rate loop_rate(100);
+    ros::Rate loop_rate(50);
     ros::Subscriber sub; // For some reason sub needs to be declared out here or else the conditional statement
     // won't work
-
+    std::thread t1 (serial_imu_callback);
     if (simulation) {
         ROS_INFO("Simulation IMU - Subscribing to /sim_imu");
         sub = n.subscribe("/sim_imu", 10, simCallback);
     }
-
+    
     else {
         ROS_INFO("Using NGIMU IMU");
-        // Initialise NGIMU receive module
-        NgimuReceiveInitialise();
-
-        // Assign NGIMU receive callback functions
-        NgimuReceiveSetReceiveErrorCallback(ngimuReceiveErrorCallback);
-        NgimuReceiveSetSensorsCallback(ngimuSensorsCallback);
-        NgimuReceiveSetQuaternionCallback(ngimuQuaternionCallback);
-        NgimuReceiveSetEulerCallback(ngimuEulerCallback);
-        NgimuReceiveSetEarthAccelerationCallback(ngimuEarthAccelerationCallback);
-
-        std::thread t1 (serial_imu_callback);
+        
     }
 
     
@@ -157,15 +156,15 @@ int main(int argc, char **argv) {
         msg.header.stamp = ros::Time::now();
         msg.header.frame_id = "base_link";
 
-        msg.orientation_covariance[0] = 0.0025;
-        msg.orientation_covariance[4] = 0.0025;
-        msg.orientation_covariance[8] = 0.0025;
-        msg.angular_velocity_covariance[0] = 0.0025;
-        msg.angular_velocity_covariance[4] = 0.0025;
-        msg.angular_velocity_covariance[8] = 0.0025;
-        msg.linear_acceleration_covariance[0] = 0.0025;
-        msg.linear_acceleration_covariance[4] = 0.0025;
-        msg.linear_acceleration_covariance[8] = 0.0025;
+        msg.orientation_covariance[0] = 0.1;
+        msg.orientation_covariance[4] = 0.1;
+        msg.orientation_covariance[8] = 0.1;
+        msg.angular_velocity_covariance[0] = 0.1;
+        msg.angular_velocity_covariance[4] = 0.1;
+        msg.angular_velocity_covariance[8] = 0.1;
+        msg.linear_acceleration_covariance[0] = 0.1;
+        msg.linear_acceleration_covariance[4] = 0.1;
+        msg.linear_acceleration_covariance[8] = 0.1;
 
 
         msg.orientation.w = quat[0];

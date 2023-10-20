@@ -45,9 +45,13 @@ int main(int argc, char **argv){
 
     while(ros::ok()){
         fsm.run(100);
-        std_msgs::Float64 msg;
-        msg.data = 0.0;
+        
         for(int i = 0; i < THRUSTER_COUNT; i++){
+            std_msgs::Float64 msg;
+            double* thrustVals = fsm.getState()->getThrusterValues();
+            if(thrustVals != nullptr) {
+                msg.data = thrustVals[i];
+            }
             thruster_pubs[i].publish(msg);
         }
         ros::spinOnce();
