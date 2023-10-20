@@ -11,6 +11,6 @@ class FSM_PControl : public FSM_Base
     void run(int dt);
     std::string get_name();
     private:
-    std::string name = "PControl";
+    std::string name_ = "PControl";
     
 };

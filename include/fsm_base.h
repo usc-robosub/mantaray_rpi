@@ -14,7 +14,7 @@ class FSM_Base {
     double robot_state[15];
 
     private:
-    std::string name = "Base";
+    std::string name_ = "Base";
     double thruster_values[THRUSTER_COUNT] = {0.0};
     
 

@@ -2,6 +2,8 @@
 
 #include "include.h"
 
+#include <ct/optcon/optcon.h>
+
 #define STATE_DIM 15
 #define CONTROL_DIM 8
 
@@ -18,16 +20,19 @@ class FSM_LQR : public FSM_Base {
         void computeLinearizedInputMatrix();
         void computeThrustCoefficients();
 
-
-
     private:
-        static constexpr double dt = 0.01;
-        std::string name = "LQR";
+        static constexpr double dt_ = 0.01;
+        std::string name_ = "LQR";
         AUV_STRUCTS::AUVParameters auvParams_;
-        Eigen::Matrix <double, STATE_DIM, STATE_DIM> Q;
-        Eigen::Matrix <double, CONTROL_DIM, CONTROL_DIM> R;
-        Eigen::Matrix <double, STATE_DIM, STATE_DIM> A;
-        Eigen::Matrix <double, STATE_DIM, CONTROL_DIM> B;
-        Eigen::Matrix <double, 6, CONTROL_DIM> thrustCoeffs_;
+        Eigen::Matrix <double, STATE_DIM, STATE_DIM> Q_;        // State Cost Matrix
+        Eigen::Matrix <double, CONTROL_DIM, CONTROL_DIM> R_;    // Input Cost Matrix
+        Eigen::Matrix <double, STATE_DIM, STATE_DIM> A_;        // System Matrix
+        Eigen::Matrix <double, STATE_DIM, CONTROL_DIM> B_;      // Control Input Matrix
+        Eigen::Matrix <double, CONTROL_DIM, STATE_DIM> K_;      // LQR Gain Matrix
+
+        Eigen::Matrix <double, 6, CONTROL_DIM> thrustCoeffs_; 
+        Eigen::Vector <double, STATE_DIM> error_;
+        Eigen::Vector <double, CONTROL_DIM> U_;// Thrust Output Matrix
+        ct::optcon::LQR<STATE_DIM, CONTROL_DIM> lqrSolver_;
 
 };

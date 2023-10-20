@@ -26,7 +26,7 @@ FSM_LQR::FSM_LQR(){
 
     this->auvParams_ = params;
 
-    this->A <<  1, 0, 0, 0, 0, 0, FSM_LQR::dt, 0, 0, 0, 0, 0, 0.5*FSM_LQR::dt*FSM_LQR::dt, 0, 0, 
+    this->A_ <<  1, 0, 0, 0, 0, 0, FSM_LQR::dt, 0, 0, 0, 0, 0, 0.5*FSM_LQR::dt*FSM_LQR::dt, 0, 0, 
                 0, 1, 0, 0, 0, 0, 0, FSM_LQR::dt, 0, 0, 0, 0, 0, 0.5*FSM_LQR::dt*FSM_LQR::dt, 0, 
                 0, 0, 1, 0, 0, 0, 0, 0, FSM_LQR::dt, 0, 0, 0, 0, 0, 0.5*FSM_LQR::dt*FSM_LQR::dt, 
                 0, 0, 0, 1, 0, 0, 0, 0, 0, FSM_LQR::dt, 0, 0, 0, 0, 0, 
@@ -41,6 +41,9 @@ FSM_LQR::FSM_LQR(){
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+
+    this->Q_.diagonal() << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
+    this->R_.diagonal() << 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01;
 
     this->computeThrustCoefficients();
     this->computeLinearizedInputMatrix();
@@ -63,10 +66,6 @@ void FSM_LQR::run(int dt){
     
 }
 
-std::string FSM_LQR::get_name(){
-    return this->name;
-}
-
 void FSM_LQR::computeThrustCoefficients() {
     for (int i = 0; i < CONTROL_DIM; i++)
     {
@@ -82,34 +81,15 @@ void FSM_LQR::computeThrustCoefficients() {
 }
 
 void FSM_LQR::computeLinearizedInputMatrix() {
-    B.block<3, 8>(3, 0) = thrustCoeffs_.block<3, 8>(0, 0);                                     // Force contributions
-    B.block<3, 8>(9, 0) = auvParams_.inertia.inverse() * thrustCoeffs_.block<3, 8>(3, 0);     // Moment contributions
+    B_.block<3, 8>(3, 0) = thrustCoeffs_.block<3, 8>(0, 0);                                     // Force contributions
+    B_.block<3, 8>(9, 0) = auvParams_.inertia.inverse() * thrustCoeffs_.block<3, 8>(3, 0);     // Moment contributions
 }
 
 Eigen::Matrix <double, CONTROL_DIM, 1> FSM_LQR::getControlOutput(Eigen::Matrix <double, STATE_DIM, 1> state, Eigen::Matrix <double, STATE_DIM, 1> setpoint, double dt){
-    Eigen::Matrix <double, STATE_DIM, 1> error = setpoint - state;
-    int N = 100;
+    this->error_ = state - setpoint;
 
-    Eigen::Matrix <double, STATE_DIM, STATE_DIM> * P = new Eigen::Matrix <double, STATE_DIM, STATE_DIM>[N];
-    Eigen::Matrix <double, STATE_DIM, STATE_DIM> * K = new Eigen::Matrix <double, 1, STATE_DIM>[N];
-    Eigen::Matrix <double, CONTROL_DIM, 1> * u = new Eigen::Matrix <double, CONTROL_DIM, 1>[N];
+    this->lqrSolver_.compute(this->Q_, this->R_, this->A_, this->B_, this->K_, true); // R is diagonal so set flag to true
 
-    P[N-1] = Q;
-
-    for(int i = N-1; i > 0; i--){
-        P[i-1] = Q + A.transpose() * P[i] * A - A.transpose() * P[i] * B * (R + B.transpose() * P[i] * B).inverse() * B.transpose() * P[i] * A;
-    }
-
-    for(int i = 0; i < N; i++){
-        K[i] = (R + B.transpose() * P[i+1] * B).inverse() * B.transpose() * P[i+1] * A;
-        u[i] = -K[i] * error;
-    }
-
-    Eigen::Matrix <double, CONTROL_DIM, 1> control_output = u[N-1];
-
-    delete[] P;
-    delete[] K;
-    delete[] u;
-
-    return control_output;
+    this->U_ = -K_*this->error_;
+    return this->U_;
 }
