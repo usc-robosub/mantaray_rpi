@@ -21,7 +21,5 @@ void FSM_Passive::run(int dt){
     
 }
 
-std::string FSM_Passive::get_name(){
-    return this->name;
-}
+
 

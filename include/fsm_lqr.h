@@ -31,8 +31,8 @@ class FSM_LQR : public FSM_Base {
         Eigen::Matrix <double, CONTROL_DIM, STATE_DIM> K_;      // LQR Gain Matrix
 
         Eigen::Matrix <double, 6, CONTROL_DIM> thrustCoeffs_; 
-        Eigen::Vector <double, STATE_DIM> error_;
-        Eigen::Vector <double, CONTROL_DIM> U_;// Thrust Output Matrix
+        Eigen::Matrix <double, STATE_DIM, 1> error_;
+        Eigen::Matrix <double, CONTROL_DIM, 1> U_;// Thrust Output Matrix
         ct::optcon::LQR<STATE_DIM, CONTROL_DIM> lqrSolver_;
 
 };

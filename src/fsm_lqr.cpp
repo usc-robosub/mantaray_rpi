@@ -5,6 +5,8 @@ double toRad(double deg){
     return deg * M_PI / 180;
 }
 
+extern double robotState[15];
+
 FSM_LQR::FSM_LQR(){
 
     AUV_STRUCTS::AUVParameters params;
@@ -26,15 +28,15 @@ FSM_LQR::FSM_LQR(){
 
     this->auvParams_ = params;
 
-    this->A_ <<  1, 0, 0, 0, 0, 0, FSM_LQR::dt, 0, 0, 0, 0, 0, 0.5*FSM_LQR::dt*FSM_LQR::dt, 0, 0, 
-                0, 1, 0, 0, 0, 0, 0, FSM_LQR::dt, 0, 0, 0, 0, 0, 0.5*FSM_LQR::dt*FSM_LQR::dt, 0, 
-                0, 0, 1, 0, 0, 0, 0, 0, FSM_LQR::dt, 0, 0, 0, 0, 0, 0.5*FSM_LQR::dt*FSM_LQR::dt, 
-                0, 0, 0, 1, 0, 0, 0, 0, 0, FSM_LQR::dt, 0, 0, 0, 0, 0, 
-                0, 0, 0, 0, 1, 0, 0, 0, 0, 0, FSM_LQR::dt, 0, 0, 0, 0, 
-                0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, FSM_LQR::dt, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, FSM_LQR::dt, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 1, 0, 0 ,0, 0, 0, FSM_LQR::dt, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 1, 0 ,0, 0, 0, 0, FSM_LQR::dt,
+    this->A_ <<  1, 0, 0, 0, 0, 0, FSM_LQR::dt_, 0, 0, 0, 0, 0, 0.5*FSM_LQR::dt_*FSM_LQR::dt_, 0, 0, 
+                0, 1, 0, 0, 0, 0, 0, FSM_LQR::dt_, 0, 0, 0, 0, 0, 0.5*FSM_LQR::dt_*FSM_LQR::dt_, 0, 
+                0, 0, 1, 0, 0, 0, 0, 0, FSM_LQR::dt_, 0, 0, 0, 0, 0, 0.5*FSM_LQR::dt_*FSM_LQR::dt_, 
+                0, 0, 0, 1, 0, 0, 0, 0, 0, FSM_LQR::dt_, 0, 0, 0, 0, 0, 
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 0, FSM_LQR::dt_, 0, 0, 0, 0, 
+                0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, FSM_LQR::dt_, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, FSM_LQR::dt_, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 1, 0, 0 ,0, 0, 0, FSM_LQR::dt_, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 1, 0 ,0, 0, 0, 0, FSM_LQR::dt_,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 ,0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,1, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
@@ -63,7 +65,7 @@ void FSM_LQR::exit(){
 }   
 
 void FSM_LQR::run(int dt){
-    
+    Eigen::Matrix <double, STATE_DIM, 1> robot_state;
 }
 
 void FSM_LQR::computeThrustCoefficients() {

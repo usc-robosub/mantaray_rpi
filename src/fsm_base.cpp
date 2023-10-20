@@ -4,7 +4,7 @@
 
 
 std::string FSM_Base::getName(){
-    return this->name;
+    return this->name_;
 }
 
 
