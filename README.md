@@ -12,7 +12,7 @@ cd mantaray_rpi
 sudo bash install_deps.sh
 cd ..
 
-sudo catkin build -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=/usr/bin/python3
+catkin build -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=/usr/bin/python3
 ```
 
 

@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(Eigen3 REQUIRED)
-find_package(ct_optcon REQUIRED COMPONENTS)
+find_package(ct_optcon REQUIRED)
 
 
 ## System dependencies are found with CMake's conventions
