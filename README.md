@@ -12,10 +12,9 @@ cd mantaray_rpi
 sudo bash install_deps.sh
 cd ..
 
-catkin build -DCMAKE_BUILD_TYPE=Release
+sudo catkin build -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=/usr/bin/python3
 ```
 
-```catkin build -DCMAKE_BUILD_TYPE=Release``` should build all three libraries together.
 
 ## Launching
 
