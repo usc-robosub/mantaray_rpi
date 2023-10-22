@@ -4,8 +4,6 @@ project(mantaray_rpi)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-# set(Eigen3_DIR "/usr/lib/cmake/eigen3")
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -20,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(Eigen3 REQUIRED)
-find_package(ct_optcon REQUIRED)
+find_package(ct_optcon REQUIRED COMPONENTS)
 
 
 ## System dependencies are found with CMake's conventions
