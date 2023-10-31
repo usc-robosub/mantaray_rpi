@@ -5,9 +5,55 @@
 #include <unordered_map>
 
 //using namespace std; ??
-
 //look into serial library
 //open device
+
+//todo make the buffer a char[] ?? rather than a string
+
+char readDevice(const char device, int baudrate, std::string* buffer) {
+    serialib serial;
+    char dvl_test = serial.openDevice(device, baudrate);
+    if (dvl_test!=1) {
+        return dvl_test;
+    }
+    printf("device opened successfully");
+    //dont need a loop bc the readDevice thing will be loop called somewhere else... i think ;p;
+    // while(serial.available() > 0) {
+    //     try {
+    //         int stringRead = serial.readString(buffer, '\n', 200/*idk so random number for now*/);
+    //         if (stringRead!=1) {
+    //             return stringRead;
+    //         }
+    //         printf("device read successfully");
+
+    //         //todo add smth to store the buffer somewhere, get it parsed n shit
+    //         delete[] buffer;
+    //     }
+    //     catch (const std::exception& e){
+    //         std::cerr << e.what() << '\n';
+
+    //     }
+    // }
+    if (serial.available() > 0) {
+        try {
+            int stringRead = serial.readString(buffer, '\n', 200/*idk so random number for now*/);
+            if (stringRead!=1) {
+                return stringRead;
+            }
+            printf("device read successfully");
+
+            //todo add smth to store the buffer somewhere, get it parsed n shit
+        }
+        catch (const std::exception& e){
+            std::cerr << e.what() << '\n';
+
+        }
+    serial.closeDevice();
+
+    return 1;
+}
+
+
 //if isDeviceOpen = true then do stuff
 // writeString to put stuff into a buffer
 // wrz command to get velocity report
@@ -19,7 +65,7 @@
 class ProtocolParser() {
     public:
         ProtocolParser();
-        bool parse(std::string buffer) {
+        bool parse(std::string* buffer) {
             vector<float> dataParts;
             std::string option;
             float optionFloat;
@@ -43,11 +89,20 @@ class ProtocolParser() {
             # Split covariance by ';' and convert to list of float values
             covariance = list(map(str2float, cov.split(b";")))
             */
-           std::unordered_map<std::string, float> parts {
+           std::unordered_map<std::string, float> parts = {
             //dataparts[0] is "wrz" i think
                 {"vx", dataParts[1]},
                 {"vy", dataParts[2]},
-                {"vz", dataParts[3]} //etc.. finish later
+                {"vz", dataParts[3]},
+                {"valid", dataParts[5]},
+                {"altitude", dataParts[6]},
+                {"fom", dataParts[7]},
+                {"covariance", dataParts[8]},
+                {"time_of_validity", dataParts[9]},
+                {"time_of_transmission", dataParts[10]},
+                {"time", dataParts[11]},
+                {"status",dataParts[12]}
+                 //etc.. finish later
             }
         }
         // creates a hashmap then puts it into some thing to spit out some variable like covariance
@@ -60,7 +115,7 @@ class ProtocolParser() {
 //dvlbase object
 class DVLBase {
     public:
-        vector<float> buffer;
+        std::string buffer;
         bool debug;
         string oldString;
         DVLBase(debug=false) {
@@ -97,7 +152,11 @@ class DVLBase {
         }
 
         vector<float> read() {
-            //some bs todo idk
+            readDevice(device, bauds, buffer);
+            part = parser.parse(buffer);
+            //get dataParts from that yo
+            return part;
+
         }
 
 };
@@ -112,14 +171,16 @@ class DVLBase {
 
 //create dvl object
 //class DVL
-class DVL //: smth that i will add later
+class DVL : DVLBase
 {
     public:
         char dvl;
-        const unsigned int baudRate;
+        const unsigned int bauds;
         DVL(const char *device, const unsigned int bauds) {
             try {
-                dvl = serialib.openDevice(device, bauds);
+                //open device
+                dvl = readDevice(device, bauds);
+                //get the buffer from it and read hUH
 
             }
             catch {
