@@ -11,6 +11,6 @@ class FSM_Passive : public FSM_Base
     void run(int dt);
     std::string get_name();
     private:
-    std::string name = "Passive";
+    std::string name_ = "Passive";
     
 };

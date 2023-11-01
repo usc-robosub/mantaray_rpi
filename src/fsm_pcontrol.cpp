@@ -28,9 +28,6 @@ void FSM_PControl::run(int dt){
     ROS_INFO("Robot State: %s", ss.str().c_str());
 }
 
-std::string FSM_PControl::get_name(){
-    return this->name;
-}
 
 
 

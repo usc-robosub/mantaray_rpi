@@ -9,6 +9,7 @@
 #include <thread>
 #include "ros/ros.h"
 #include "tf/tf.h"
+#include "auv_structs.h"
 
 
 #define THRUSTER_COUNT 8

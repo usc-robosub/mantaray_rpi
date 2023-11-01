@@ -9,13 +9,14 @@ class FSM_Base {
     virtual void enter() = 0;
     virtual void exit() = 0;
     virtual void run(int dt) = 0;
+    double* getThrusterValues();
 
     protected:
     double robot_state[15];
-
+    double* thruster_values;
     private:
-    std::string name = "Base";
-    double thruster_values[THRUSTER_COUNT] = {0.0};
+    std::string name_ = "Base";
+    
     
 
 };

@@ -4,7 +4,8 @@
 FSM::FSM(){
     this->state_list.push_back(std::unique_ptr<FSM_Base>(new FSM_Passive()));
     this->state_list.push_back(std::unique_ptr<FSM_Base>(new FSM_PControl()));
-    this->setState(0);
+    this->stateIndex = 0;
+    this->state_list[this->stateIndex]->enter();
 }
 
 FSM::~FSM(){

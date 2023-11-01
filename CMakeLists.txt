@@ -17,6 +17,10 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
+find_package(Eigen3 REQUIRED)
+find_package(ct_optcon REQUIRED)
+
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -125,6 +129,8 @@ LIBRARIES mantaray_rpi
 include_directories(
 include
   ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
+  ${ct_optcon_INCLUDE_DIRS}
   include/Osc99
   include/serialib
   
@@ -148,14 +154,12 @@ src/Osc99/OscSlip.c)
 set(SOURCES src/fsm_base.cpp
 src/fsm.cpp
 src/fsm_pcontrol.cpp
-src/fsm_passive.cpp)
+src/fsm_passive.cpp
+src/fsm_lqr.cpp)
 
 add_library(osc99 SHARED ${OSC99_SOURCES})
-
 add_library(ngimurecieve SHARED src/NgimuReceive.c)
-
 add_library(serialib SHARED src/serialib/serialib.cpp)
-
 add_library(mantaray_rpi SHARED ${SOURCES})
 
 ## Add cmake target dependencies of the library
@@ -190,7 +194,10 @@ target_link_libraries(imu_publisher
 
 target_link_libraries(main
   ${catkin_LIBRARIES}
-  mantaray_rpi)
+  mantaray_rpi
+  Eigen3::Eigen
+  ct_optcon
+)
 
 #############
 ## Install ##
