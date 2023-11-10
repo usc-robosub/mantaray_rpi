@@ -64,7 +64,23 @@ int DVLPUB::reportType(){
     // todo
     // readChar() until wrz or wrp
     // if wrz return 1
-    // if wrp return 0
+    // if wrp return 2
+    while(true) {
+        char* letter = "e" ; // idfk
+        while (*letter != 'w'){
+            this->serial.readChar(letter); 
+        }
+        this->serial.readChar(letter); // next letter is gonna be the same bc r
+        if (*letter != 'r') {
+            continue;
+        } 
+        this->serial.readChar(letter); // z or p
+        if (*letter == 'z') {
+            return 1;
+        } else if (*letter == 'p') {
+            return 2;
+        }
+    }
 }
 
 void DVLPUB::parseWRZ(){
@@ -202,8 +218,43 @@ int main(int argc, char* argv[]){
     DVLPUB dvl = new DVLPUB(); // ????? idk
 
     while (ros::ok()) {
+        // create msg
         dvl.readDevice();
-        msg/*.smth idk*/ = dvl.vx;
+        msg.header.stamp = ros::Time::now();
+        msg.header.frame_id = "dvl_idk_wotdeufk";
+        
+        // velocity report
+        msg.wrz.velocity.x = dvl.vx;
+        msg.wrz.velocity.y = dvl.vy;
+        msg.wrz.velocity.z = dvl.vz;
+
+        msg.wrz.valid = dvl.valid;
+        msg.wrz.altitude = dvl.altitude;
+        msg.wrz.fom = dvl.fom;
+        msg.wrz.covariance = dvl.covariance;
+
+        msg.wrz.time.validity = dvl.time_of_validity;
+        msg.wrz.time.transmission = dvl.time_of_transmission;
+        msg.wrz.time.time = dvl.time;
+
+        msg.wrz.status = dvl.status;
+        msg.wrz.checksum = dvl.checksum;
+        
+        // dead reckoning report???
+        msg.wrp.x = dvl.x;
+        msg.wrp.y = dvl.y;
+        msg.wrp.z = dvl.z;
+        
+        msg.wrp.pos_std = dvl.pos_std;
+        msg.wrp.roll = dvl.roll;
+        msg.wrp.pitch = dvl.pitch;
+        msg.wrp.yaw = dvl.yaw;
+
+        dvl_pub.publish(msg);
+
+        ros::spinOnce();
+
+        loop_rate.sleep();
     }
 
 }
