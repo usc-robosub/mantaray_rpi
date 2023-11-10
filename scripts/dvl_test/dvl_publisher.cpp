@@ -3,6 +3,9 @@
 #include "vector"
 #include "sstream"
 #include "string"
+#include "ros/ros.h"
+#include <ros/console.h>
+#include "std_msgs/String.h"
 
 #define PORT "/dev/ttyUSB0"
 
@@ -17,8 +20,8 @@ DVLPUB::~DVLPUB(){
 
 // reads data from serial connection while open
 int DVLPUB::readDevice(){
-    serialib serial;
-    char dvl_test = serial.openDevice(PORT, 115200);
+    // serialib serial;
+    char dvl_test = this->serial.openDevice(PORT, 115200);
     if (dvl_test!=1) {
         return dvl_test;
     }
@@ -26,27 +29,29 @@ int DVLPUB::readDevice(){
     while (true){
         while (serial.available() > 0){
             try{
-                char* buff = new char[10000]; // how large can report be
+                // char* buff = new char[256]; // how large can report be
                 // does buff contain both WRZ and WRU reports???
                 // int report = checkReport(buff);
-                serial.readBytes(buff,9999,1000);
-                parseData(buff);
-                // if (report == 1){
-                //     setWRZ(buff);
-                // }
-                // else if (report == 2){
-                //     setWRU(buff);
-                // }
-                // regroup with matt on how to send before next loop overwrites values
-                if (wrz.size() != 0){
-                    setWRZ();
+                // serial.readBytes(buff,499,500);
+                // parse when hit wrz or wrp
+                // parseData(buff);
+
+                int report = reportType();
+                if (report == 1){
+                    parseWRZ();
+                    parseData();
+                    setWRZ(); // need to rewrite
                 }
-                if (wru.size() != 0){
-                    setWRU();
+                else if (report == 2){
+                    parseWRP();
+                    parseData();
+                    setWRP(); // need to rewrite
                 }
-                wru.clear();
+                ss.clear();
+                // send data here before next loop overwrites
+                wrp.clear();
                 wrz.clear();
-                delete[] buff;
+                // delete[] buff;
             } catch (const std::exception& e) {
                 std::cerr << e.what() << '\n';
             }
@@ -55,22 +60,86 @@ int DVLPUB::readDevice(){
     return 1;
 }
 
-// function to check with report was sent
-// int DVLPUB::checkReport(char* buff){
-//     if (strncmp(buff,"wrz,",4) == 0){
-//         return 1;
-//     }
-//     else if (strncmp(buff,"wru,",4) == 0) {
-//         return 2;
-//     }
-//     return 0;
-// }
+int DVLPUB::reportType(){
+    // todo
+    // readChar() until wrz or wrp
+    // if wrz return 1
+    // if wrp return 0
+}
 
-void DVLPUB::parseData(char* buff){
-    std::stringstream ss(buff);
+void DVLPUB::parseWRZ(){
+    int count = 0;
+    wrz.push_back("wrz");
+    char* letter = "n";
+    while (count < 11){
+        if (this->serial.readChar(letter) == 1){
+            if (strchr(letter,',') != nullptr){
+                count++;
+            }
+            this->ss << letter;
+        } else{
+            std::cout << "Incorrect Data read from DVL" << std::endl;
+        }
+    }
+    // read last char (status)
+    if (this->serial.readChar(letter) == 1){
+            if (strchr(letter,',') != nullptr){
+                count++;
+            }
+            this->ss << letter;
+            this->ss << ',';
+        } else{
+            std::cout << "Incorrect Data read from DVL" << std::endl;
+    }
+    // read last 3 chars for checksum
+    for (int i=0;i<4;i++){
+        if (this->serial.readChar(letter) == 1){
+            this->ss << letter;
+        } else{
+            std::cout << "Incorrect Data read from DVL" << std::endl;
+        }
+    }
+}
+
+void DVLPUB::parseWRP(){
+    int count = 0;
+    wrp.push_back("wrp");
+    char* letter = "n";
+    while (count < 9){
+        if (this->serial.readChar(letter) == 1){
+            if (strchr(letter,',') != nullptr){
+                count++;
+            }
+            this->ss << letter;
+        } else{
+            std::cout << "Incorrect Data read from DVL" << std::endl;
+        }
+    }
+    // read last char (status)
+    if (this->serial.readChar(letter) == 1){
+            if (strchr(letter,',') != nullptr){
+                count++;
+            }
+            this->ss << letter;
+            this->ss << ',';
+        } else{
+            std::cout << "Incorrect Data read from DVL" << std::endl;
+    }
+    // read 3 chars for checksum
+    for (int i=0;i<4;i++){
+        if (this->serial.readChar(letter) == 1){
+            this->ss << letter;
+        } else{
+            std::cout << "Incorrect Data read from DVL" << std::endl;
+        }
+    }
+}
+
+void DVLPUB::parseData(){
+    // std::stringstream ss(buff);
     std::string val;
     int report = 0;
-    while (getline(ss,val,',')){
+    while (getline(this->ss,val,',')){
         if (val == "wrz"){
             report = 1;
         }
@@ -81,7 +150,7 @@ void DVLPUB::parseData(char* buff){
             wrz.push_back(val);
         }
         else if (report == 2){
-            wru.push_back(val);
+            wrp.push_back(val);
         }
     }
 }
@@ -100,19 +169,43 @@ void DVLPUB::setWRZ(){
         time_of_transmission = std::stod(wrz.at(9));
         time = std::stod(wrz.at(10));
         status = wrz.at(11);
+        checksum = wrz.at(12);
     } catch (const std::out_of_range& e) {
-        std::cerr << "Out of range exception: " << e.what() << std::endl;
+        std::cerr << "Out of range exception in setWRZ(): " << e.what() << std::endl;
     }
 }
-// parse WRU Transducer report from data vector
-void DVLPUB::setWRU(){
-    // sends 4, could store in array of size 4 for each value
-    // check if parse works with sample input with newline
-    // how tf does it send this data
+// parse WRP Transducer report from data vector
+void DVLPUB::setWRP(){
+    try{
+        x = std::stod(wrp.at(1));
+        y = std::stod(wrp.at(2));
+        z = std::stod(wrp.at(3));
+        pos_std = std::stod(wrp.at(4));
+        roll = std::stod(wrp.at(5));
+        pitch = std::stod(wrp.at(6));
+        yaw = std::stod(wrp.at(7));
+        status = wrp.at(8);
+        checksum = wrp.at(9);
+    } catch (const std::out_of_range& e) {
+        std::cerr << "Out of range exception in setWRP(): " << e.what() << std::endl;
+    }
+    
 }
 
 int main(int argc, char* argv[]){
     // ros stuff here
+    ros::init(argc, argv, "dvl_publisher");
+    ros::NodeHandle n;
+    // first arg is topic, second arg is size of publisher queue/# of messages
+    ros::Publisher dvl_pub = n.advertise<std_msgs::String>("dvl", 1);
+    ros::Rate loop_rate(10);
+    DVLPUB dvl = new DVLPUB(); // ????? idk
+
+    while (ros::ok()) {
+        dvl.readDevice();
+        msg/*.smth idk*/ = dvl.vx;
+    }
+
 }
 
 

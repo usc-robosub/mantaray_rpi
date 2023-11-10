@@ -1,9 +1,13 @@
 class DVLPUB{
     public:
+        // serial connection
+        serialib serial;
+        // string stream to hold data
+        std::stringstream ss;
         // vector of data for wrz
         std::vector<std::string> wrz;
-        // vector of data wru
-        std::vector<std::string> wru;
+        // vector of data wrp
+        std::vector<std::string> wrp;
         // https://waterlinked.github.io/dvl/dvl-protocol/#serial-protocol
         // WRZ data members
         // ex: wrz,0.120,-0.400,2.000,y,1.30,1.855,1e-07;0;1.4;0;1.2;0;0.2;0;1e+09,7,14,123.00,1*50
@@ -29,49 +33,52 @@ class DVLPUB{
         double time_of_transmission;
         // Milliseconds since last velocity report (ms)
         double time;
+
+        // WRP data members
+        // wrp,[time_stamp],[x],[y],[z],[pos_std],[roll],[pitch],[yaw],[status]
+        // wrp,49056.809,0.41,0.15,1.23,0.4,53.9,13.0,19.3,0*de
+
+        // Time stamp of report (Unix timestamp in seconds)
+        double time_stamp;
+        // Distance in X direction (m)
+        double x;
+        // Distance in Y direction (m)
+        double y;
+        // Distance in downward direction (m)
+        double z;
+        // Standard deviation (Figure of merit) for position (m)
+        double pos_std;
+        // Rotation around X axis (degrees)
+        double roll;
+        // Rotation around Y axis (degrees)
+        double pitch;
+        // Rotation around Z axis, i.e. heading (degrees)
+        double yaw;
+        
+        // used for wrz and wrp:
         // 0 for normal operation, 1 for operational issues such as high temperature
         std::string status;
-
-        // WRU data members
-        /* ex:
-            wru,0,0.070,1.10,-40,-95*9c
-            wru,1,-0.500,1.25,-62,-104*f0
-            wru,2,2.200,1.40,-56,-98*18
-            wru,3,1.800,1.35,-58,-96*a3
-        */
-        // Transducer number
-        int id;
-        // Velocity in the direction of the transducer (m/s)
-        double velocity;
-        // Distance (parallel to the transducer beam, i.e. not the vertical distance) to the reflecting surface from this transducer (m)
-        double distance;
-        // Received signal strength indicator: strength of the signal received by this transducer (dBm)
-        double rssi;
-        // Noise spectral density: strength of the background noise received by this transducer (dBm)
-        std::string nsd;
-        // constructor
+        // checksum format: '*' followed by 2 hex digits
+        std::string checksum;
+        
         DVLPUB();
 
         // destructor
         ~DVLPUB();
 
-        // function to make serial connection and read data from device
         int readDevice();
 
-        // function to differentiate reports
-        int checkReport(char* buff);
+        void parseData();
 
-        // function to parse comma separated report (buff) into data vector
-        // void checkReport(char* buff);
+        void parseWRZ();
 
-        //
-        void parseData(char* buff);
+        void parseWRP();
 
         // function to parse data read into vector of string for WRZ Velocity report
         void setWRZ();
 
-        // function to parse data read into vector of string for WRU Transducer report
-        void setWRU();
+        // function to parse data read into vector of string for WRP dead reckoning report
+        void setWRP();
 
-        
+        int reportType();
 };
