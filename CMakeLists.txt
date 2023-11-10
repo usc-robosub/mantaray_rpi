@@ -151,11 +151,11 @@ src/Osc99/OscMessage.c
 src/Osc99/OscPacket.c
 src/Osc99/OscSlip.c)
 
-set(SOURCES src/fsm_base.cpp
-src/fsm.cpp
-src/fsm_pcontrol.cpp
-src/fsm_passive.cpp
-src/fsm_lqr.cpp)
+set(SOURCES src/fsm/fsm_base.cpp
+src/fsm/fsm.cpp
+src/fsm/fsm_pcontrol.cpp
+src/fsm/fsm_passive.cpp
+src/fsm/fsm_lqr.cpp)
 
 add_library(osc99 SHARED ${OSC99_SOURCES})
 add_library(ngimurecieve SHARED src/NgimuReceive.c)

@@ -15,13 +15,13 @@ class FSM_LQR : public FSM_Base {
         void exit();
         void run(int dt);
         std::string get_name();
-        
+        double dt_ = 0.01;
         Eigen::Matrix <double, CONTROL_DIM, 1> getControlOutput(Eigen::Matrix <double, STATE_DIM, 1> state, Eigen::Matrix <double, STATE_DIM, 1> setpoint);
         void computeLinearizedInputMatrix();
         void computeThrustCoefficients();
 
     private:
-        static constexpr double dt_ = 0.01;
+        
         std::string name_ = "LQR";
         AUV_STRUCTS::AUVParameters auvParams_;
         Eigen::Matrix <double, STATE_DIM, STATE_DIM> Q_;        // State Cost Matrix
