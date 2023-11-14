@@ -1,3 +1,8 @@
+#include "serialib.h"
+#include "vector"
+#include "sstream"
+#include "string"
+
 class DVLPUB{
     public:
         // serial connection
@@ -79,6 +84,10 @@ class DVLPUB{
 
         // function to parse data read into vector of string for WRP dead reckoning report
         void setWRP();
+
+        void printWRZ();
+
+        void printWRP();
 
         int reportType();
 };

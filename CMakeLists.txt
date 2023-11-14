@@ -55,6 +55,7 @@ add_message_files(
   FILES
   FloatStamped.msg
   Dvl.msg
+  dvl.msg 
 )
 
 ## Generate services in the 'srv' folder
