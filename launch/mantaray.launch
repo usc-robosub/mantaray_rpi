@@ -5,7 +5,7 @@
   </node>
 
   <!-- <node name="clocker" pkg="mantaray_rpi" type="clock.py" output="screen" respawn="true"/> -->
-  <param name="simulation" type="bool" value="False"/>
+  <param name="simulation" type="bool" value="True"/>
   <node name="imu_publisher" pkg="mantaray_rpi" type="imu_publisher" output="screen" respawn="true" ns="mantaray"/>
   <node name="control" pkg="mantaray_rpi" type="main" output="screen" respawn="true" ns="mantaray"/> 
   <!--<node name="dvl_publisher" pkg="mantaray_rpi" type="dvl_publisher.py" output="screen" respawn="true"/>-->
