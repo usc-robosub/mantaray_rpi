@@ -6,8 +6,8 @@
 // #include "ros/ros.h"
 // #include <ros/console.h>
 // #include "std_msgs/String.h"
-
-#define PORT "/dev/ttyS3"
+#include <unistd.h>
+#define PORT "/dev/ttyUSB0"
 
 // constructor
 DVLPUB::DVLPUB(){
@@ -34,6 +34,7 @@ int DVLPUB::readDevice(){
             std::cout << "temp: " << temp << std::endl;
             delete[] temp;
             // std::cout << "ur a failure" << std::endl;
+            sleep(1);
         }
         while (serial.available() > 0){
             try{
@@ -68,6 +69,7 @@ int DVLPUB::readDevice(){
             } catch (const std::exception& e) {
                 std::cerr << e.what() << '\n';
             }
+        sleep(1);
         }
     }
     return 1;
