@@ -19,6 +19,7 @@ class FSM_LQR : public FSM_Base {
         Eigen::Matrix <double, CONTROL_DIM, 1> getControlOutput(Eigen::Matrix <double, STATE_DIM, 1> state, Eigen::Matrix <double, STATE_DIM, 1> setpoint);
         void computeLinearizedInputMatrix();
         void computeThrustCoefficients();
+        void setSetpoint(Eigen::Matrix <double, STATE_DIM, 1> setpoint);
 
     private:
         
