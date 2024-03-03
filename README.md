@@ -22,6 +22,9 @@ catkin build -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=/usr/bin/python3
 roslaunch mantaray_rpi mantaray.launch
 ```
 
+## Sources
+- How to make ROS [wrappers](https://roboticsbackend.com/create-a-ros-driver-package-introduction-what-is-a-ros-wrapper-1-4/)
+
 ## Dependencies:
 * [serialib](https://github.com/imabot2/serialib) - Cross-platform lightweight serial library for C++
 * [NGIMU C++ Example](https://github.com/xioTechnologies/NGIMU-C-Cpp-Example) - A wrapper for decoding NGIMU messages
