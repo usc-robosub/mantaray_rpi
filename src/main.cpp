@@ -42,9 +42,18 @@ int main(int argc, char **argv){
     ros::Rate loop_rate(10);
 
     FSM fsm;
-    fsm.setState(1);
+    fsm.setState(2);
 
+    Eigen::Matrix<double, 15, 1> point;
+    
+    
+
+    point << 0,0,30,0,0,0,0,0,0,0,0,0,0,0,0;
+    // FSM_Base* thang = fsm.getState();
+    // FSM_LQR* thing = static_cast<FSM_LQR*> (thang);
+    // thing->setSetpoint(point);
     while(ros::ok()){
+        
         fsm.run(100);
         
         for(int i = 0; i < THRUSTER_COUNT; i++){
