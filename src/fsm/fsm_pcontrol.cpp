@@ -1,7 +1,9 @@
 #include "include.h"
 #include "fsm.h"
 
+
 extern double robotState[15];
+extern tf::Quaternion robotQuat;
 
 FSM_PControl::FSM_PControl(){
     
@@ -20,12 +22,11 @@ void FSM_PControl::exit(){
 }
 
 void FSM_PControl::run(int dt){
-    std::stringstream ss;
-    for(int i = 0; i < 15; i++){
-        ss << robotState[i] << " ";
-    }
+    Eigen::Quaternion<double> meas(robotQuat.getW(), robotQuat.getX(), robotQuat.getY(), robotQuat.getZ());
+    Eigen::Quaternion<double> qsp(0,0,0,0);
 
-    ROS_INFO("Robot State: %s", ss.str().c_str());
+    Eigen::Matrix<double, 3, 1> sp = this->ac.getAngularSetpoint(qsp, meas);
+    
 }
 
 

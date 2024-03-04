@@ -5,6 +5,7 @@ project(mantaray_rpi)
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
 
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -19,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Eigen3 REQUIRED)
 find_package(ct_optcon REQUIRED)
+
 
 
 ## System dependencies are found with CMake's conventions
@@ -108,17 +110,8 @@ generate_messages(
 ## catkin specific configuration ##
 ###################################
 ## The catkin_package macro generates cmake config files for your package
-## Declare things to be passed to dependent projects
-## INCLUDE_DIRS: uncomment this if your package contains header files
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
-INCLUDE_DIRS include
-LIBRARIES mantaray_rpi
-  CATKIN_DEPENDS roscpp rospy std_msgs nav_msgs geometry_msgs
-#  DEPENDS system_lib
-)
+## Declare thingBoost::math
+
 
 ###########
 ## Build ##
@@ -127,7 +120,7 @@ LIBRARIES mantaray_rpi
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-include
+  include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
   ${ct_optcon_INCLUDE_DIRS}
@@ -155,7 +148,9 @@ set(SOURCES src/fsm/fsm_base.cpp
 src/fsm/fsm.cpp
 src/fsm/fsm_pcontrol.cpp
 src/fsm/fsm_passive.cpp
-src/fsm/fsm_lqr.cpp)
+src/fsm/fsm_lqr.cpp
+src/fsm/attitude_controller.cpp
+src/pid.cpp)
 
 add_library(osc99 SHARED ${OSC99_SOURCES})
 add_library(ngimurecieve SHARED src/NgimuReceive.c)

@@ -7,6 +7,7 @@
 ros::Publisher* thruster_pubs;
 
 double robotState[15] = {0.0};
+tf::Quaternion robotQuat;
 
 void odometryFilteredListenerCallback(nav_msgs::Odometry msg);
 void accelFilteredListenerCallback(geometry_msgs::AccelWithCovarianceStamped msg);
@@ -70,7 +71,7 @@ void odometryFilteredListenerCallback(nav_msgs::Odometry msg) {
         msg.pose.pose.orientation.z, msg.pose.pose.orientation.w);
     tf::Matrix3x3 mat(q);
     mat.getRPY(robotState[3], robotState[4], robotState[5]);
-
+    robotQuat = q;
     robotState[6] = msg.twist.twist.linear.x;
     robotState[7] = msg.twist.twist.linear.y;
     robotState[8] = msg.twist.twist.linear.z;

@@ -1,5 +1,6 @@
 #pragma once
 #include "include.h"
+#include "attitude_controller.h"
 
 class FSM_PControl : public FSM_Base
 {
@@ -12,5 +13,6 @@ class FSM_PControl : public FSM_Base
     std::string get_name();
     private:
     std::string name_ = "PControl";
+    AttitudeController ac;
     
 };
