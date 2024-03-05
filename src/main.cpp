@@ -1,6 +1,7 @@
 #include "include.h"
 #include "std_msgs/Float64.h"
 #include "nav_msgs/Odometry.h"
+#include "mantaray_rpi/FloatStamped.h"
 #include "geometry_msgs/AccelWithCovarianceStamped.h"
 #include "fsm.h"
 
@@ -34,15 +35,26 @@ int main(int argc, char **argv){
     accelFilteredListener = nh.subscribe<geometry_msgs::AccelWithCovarianceStamped>("accel/filtered", 1, accelFilteredListenerCallback);
 
     thruster_pubs = new ros::Publisher[THRUSTER_COUNT];
-    for(int i = 0; i < THRUSTER_COUNT; i++){
-        std::string topic_name = "thruster/" + std::to_string(i) + "/input";
-        thruster_pubs[i] = nh.advertise<std_msgs::Float64>(topic_name, 1);
+    bool simulation = false;
+    ROS_WARN_COND(!nh.getParam("/simulation", simulation), "\'simulation\' wasn't defined as a param!");
+
+    if(!simulation){
+        for(int i = 0; i < THRUSTER_COUNT; i++){
+            std::string topic_name = "thrusters/" + std::to_string(i) + "/input";
+            thruster_pubs[i] = nh.advertise<std_msgs::Float64>(topic_name, 1);
+        }
+    } else {
+        for(int i = 0; i < THRUSTER_COUNT; i++){
+            std::string topic_name = "thrusters/" + std::to_string(i) + "/input";
+            thruster_pubs[i] = nh.advertise<mantaray_rpi::FloatStamped>(topic_name, 1);
+        }
     }
+    ROS_INFO("sim: %d", simulation);
 
     ros::Rate loop_rate(10);
 
     FSM fsm;
-    fsm.setState(2);
+    fsm.setState(1);
 
     Eigen::Matrix<double, 15, 1> point;
     
@@ -57,12 +69,23 @@ int main(int argc, char **argv){
         fsm.run(100);
         
         for(int i = 0; i < THRUSTER_COUNT; i++){
-            std_msgs::Float64 msg;
-            double* thrustVals = fsm.getState()->getThrusterValues();
-            if(thrustVals != nullptr) {
-                msg.data = thrustVals[i];
+            if(!simulation) {
+                std_msgs::Float64 msg;
+                double* thrustVals = fsm.getState()->getThrusterValues();
+                if(thrustVals != nullptr) {
+                    msg.data = thrustVals[i];
+                }
+                thruster_pubs[i].publish(msg);
+            } else {
+                mantaray_rpi::FloatStamped msg;
+                double* thrustVals = fsm.getState()->getThrusterValues();
+                if(thrustVals != nullptr) {
+                    msg.header.stamp = ros::Time::now();
+                    msg.header.frame_id = "base_link";
+                    msg.data = thrustVals[i];
+                }
+                thruster_pubs[i].publish(msg);
             }
-            thruster_pubs[i].publish(msg);
         }
         ros::spinOnce();
         loop_rate.sleep();

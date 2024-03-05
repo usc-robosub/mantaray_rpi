@@ -9,9 +9,10 @@ Eigen::Matrix <double, 3, 1> AttitudeController::getAngularSetpoint(Eigen::Quate
     } else {
         errShort = err;
     }
-
     Eigen::Matrix <double, 3, 1> angularSetpoint;
     angularSetpoint << errShort.x(), errShort.y(), errShort.z();
+    ROS_INFO("here32");
+    ROS_INFO("%f", (errShort.x()));
     angularSetpoint *= (2*this->kP);
-
+    return angularSetpoint;
 } 

@@ -29,7 +29,7 @@ def thruster_publisher(name, fsm):
     fsm.current_state.set_rot_target(quaternion_from_euler(math.radians(0),math.radians(0),math.radians(45)))
 
     for i in range(THRUSTER_COUNT):
-        pub.append(rospy.Publisher('/' + name + '/thruster/'+str(i)+'/input', Float64, queue_size=10))
+        pub.append(rospy.Publisher('/' + name + '/thrusters/'+str(i)+'/input', Float64, queue_size=10))
     
     
     while not rospy.is_shutdown():
