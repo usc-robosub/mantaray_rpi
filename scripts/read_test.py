@@ -2,7 +2,7 @@ import smbus
 import time
 import struct
 
-bus = smbus.SMBus(0) # 1 indicates /dev/i2c-1
+bus = smbus.SMBus(0) # 0 indicates /dev/i2c-0
 address = 0x2d # The I2C address of the Teensy device
 
 def writeNumber(value):
