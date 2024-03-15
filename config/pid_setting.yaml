@@ -1,0 +1,22 @@
+position_pid_motor_1:
+  p: 1.0
+  i: 0.0
+  d: 0.1
+  i_clamp: 1.0
+  antiwindup: true
+  publish_state: true
+  setpoint_topic: ""
+  state_topic: "motor1_position_state"
+  control_effort_topic: "motor1_position_control_effort"
+
+velocity_pid_1:
+  p: 1.0
+  i: 0.0
+  d: 0.1
+  i_clamp: 1.0
+  antiwindup: true
+  publish_state: true
+  setpoint_topic: "motor1_position_control_effort"
+  state_topic: "motor1_velocity_state"
+  control_effort_topic: "motor1_velocity_control_effort"
+

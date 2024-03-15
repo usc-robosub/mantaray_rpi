@@ -1,0 +1,39 @@
+<launch>
+  <!-- This launch file is for mantaray to move autonomously -->
+  <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true" ns="mantaray">
+    <rosparam command="load" file="$(find mantaray_rpi)/params/ekf_params.yaml" />
+  </node>
+
+  <!-- <node name="clocker" pkg="mantaray_rpi" type="clock.py" output="screen" respawn="true"/> -->
+  <param name="simulation" type="bool" value="True"/>
+  <node name="imu_publisher" pkg="mantaray_rpi" type="imu_publisher" output="screen" respawn="true" ns="mantaray"/>
+  <node name="control" pkg="mantaray_rpi" type="main" output="screen" respawn="true" ns="mantaray"/> 
+  <!--<node name="dvl_publisher" pkg="mantaray_rpi" type="dvl_publisher.py" output="screen" respawn="true"/>-->
+  <!--<node name="thrusters" pkg="mantaray_rpi" type="control_pi_serial.py" output="screen" respawn="true"/>-->
+
+
+  <rosparam command="load" file="$(find mantaray_rpi)/config/pid_settings.yaml"/>
+  
+  <node name="position_pid_motor_1" pkg="pid" type="pid" >
+    <rosparam ns="position_pid_motor_1">$(find mantaray_rpi)/config/pid_settings.yaml</rosparam>
+    <param name="p" value="$(arg position_pid_p)" />
+    <param name="i" value="$(arg position_pid_i)" />
+    <param name="d" value="$(arg position_pid_d)" />
+    <param name="i_clamp" value="$(arg position_pid_i_clamp)" />
+    <param name="antiwindup" value="$(arg position_pid_antiwindup)" />
+    <!-- <param name="max_loop_frequency" value="10.0" />
+    <param name="min_loop_frequency" value="10.0" /> -->
+  </node>
+
+  <node name="velocity_pid_motor_1" pkg="pid" type="pid" >
+    <rosparam ns="velocity_pid_motor_1">$(find mantaray_rpi)/config/pid_settings.yaml</rosparam>
+    <param name="p" value="$(arg position_pid_p)" />
+    <param name="i" value="$(arg position_pid_i)" />
+    <param name="d" value="$(arg position_pid_d)" />
+    <param name="i_clamp" value="$(arg velocity_pid_i_clamp)" />
+    <param name="antiwindup" value="$(arg velocity_pid_antiwindup)" />
+    <!-- <param name="max_loop_frequency" value="100.0" />
+    <param name="min_loop_frequency" value="100.0" /> -->
+  </node>
+
+</launch>
