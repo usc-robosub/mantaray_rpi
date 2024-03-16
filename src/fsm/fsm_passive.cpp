@@ -17,9 +17,13 @@ void FSM_Passive::exit(){
     ROS_INFO("Exiting Passive State");
 }
 
+void FSM_Passive::setSetpoint(const Eigen::Matrix<double, 15, 1> setpoint) {
+    this->setpoint = setpoint;
+}
+
+
 void FSM_Passive::run(int dt){
     
 }
-
 
 

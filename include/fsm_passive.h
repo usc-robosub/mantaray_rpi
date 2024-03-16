@@ -10,7 +10,11 @@ class FSM_Passive : public FSM_Base
     void exit();
     void run(int dt);
     std::string get_name();
+    void setSetpoint(const Eigen::Matrix<double, 15, 1> setpoint);
+
+
     private:
     std::string name_ = "Passive";
+    Eigen::Matrix<double, 15, 1> setpoint;
     
 };

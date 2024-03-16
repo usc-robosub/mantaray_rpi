@@ -21,6 +21,10 @@ void FSM_PControl::exit(){
     ROS_INFO("Exiting PControl State");
 }
 
+void FSM_PControl::setSetpoint(const Eigen::Matrix<double, 15, 1> setpoint) {
+    this->setpoint = setpoint;
+}
+
 void FSM_PControl::run(int dt){
     Eigen::Quaternion<double> meas(robotQuat.getW(), robotQuat.getX(), robotQuat.getY(), robotQuat.getZ());
     ROS_INFO("Measured Quaternion: (W=%f, X=%f, Y=%f, Z=%f)", meas.w(), meas.x(), meas.y(), meas.z());
@@ -47,3 +51,5 @@ void FSM_PControl::run(int dt){
     ROS_INFO("Robot State: %f %f %f", sp(0,0), sp(1,0), sp(2,0));  
     ROS_INFO("_____________");
  }
+
+

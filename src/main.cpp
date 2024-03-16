@@ -59,8 +59,6 @@ int main(int argc, char **argv){
     fsm.setState(1);
 
     Eigen::Matrix<double, 15, 1> point;
-    
-    
 
     point << 0,0,0,0,0,2,0,0,0,0,0,0,0,0,0;
     FSM_Base* thang = fsm.getState();

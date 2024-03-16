@@ -1,8 +1,6 @@
 #pragma once
 #include "include.h"
 
-#define STATE_DIM 15
-
 class FSM_Base {
 
     public:
@@ -13,10 +11,10 @@ class FSM_Base {
     virtual void exit() = 0;
     virtual void run(int dt) = 0;
     double* getThrusterValues();
-    void setSetpoint(Eigen::Matrix <double, STATE_DIM, 1> setpoint);
+    virtual void setSetpoint(const Eigen::Matrix<double, 15, 1>& setpoint);
 
     protected:
-    Eigen::Matrix <double, STATE_DIM, 1> setpoint;
+    Eigen::Matrix <double, 15, 1> setpoint;
     double robot_state[15];
     double* thruster_values;
     private:
