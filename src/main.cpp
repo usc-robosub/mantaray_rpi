@@ -4,6 +4,8 @@
 #include "mantaray_rpi/FloatStamped.h"
 #include "geometry_msgs/AccelWithCovarianceStamped.h"
 #include "fsm.h"
+#include "std_msgs/Float64.h"
+
 
 ros::Publisher* thruster_pubs;
 
@@ -60,10 +62,10 @@ int main(int argc, char **argv){
     
     
 
-    point << 0,0,30,0,0,0,0,0,0,0,0,0,0,0,0;
-    // FSM_Base* thang = fsm.getState();
-    // FSM_LQR* thing = static_cast<FSM_LQR*> (thang);
-    // thing->setSetpoint(point);
+    point << 0,0,0,0,0,2,0,0,0,0,0,0,0,0,0;
+    FSM_Base* thang = fsm.getState();
+    FSM_PControl* thing = static_cast<FSM_PControl*> (thang);
+    thing->setSetpoint(point);
     while(ros::ok()){
         
         fsm.run(100);
@@ -110,7 +112,7 @@ void odometryFilteredListenerCallback(nav_msgs::Odometry msg) {
     robotState[9] = msg.twist.twist.angular.x;
     robotState[10] = msg.twist.twist.angular.y;
     robotState[11] = msg.twist.twist.angular.z;
-    
+    ROS_INFO("Angular Velocities: X=%f, Y=%f, Z=%f", robotState[9], robotState[10], robotState[11]);
 }
 
 void accelFilteredListenerCallback(geometry_msgs::AccelWithCovarianceStamped msg) {
