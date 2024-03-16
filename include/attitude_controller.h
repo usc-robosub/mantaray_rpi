@@ -7,7 +7,7 @@ class AttitudeController {
     Eigen::Matrix <double, 3, 1> getAngularSetpoint(Eigen::Quaternion<double> sp, Eigen::Quaternion<double> meas);
 
     private:
-    double kP = 100000;
+    double kP = 1;
     
 
 };

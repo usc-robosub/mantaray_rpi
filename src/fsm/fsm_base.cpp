@@ -11,4 +11,6 @@ double* FSM_Base::getThrusterValues(){
     return this->thruster_values;
 }
 
-
+void FSM_LQR::setSetpoint(Eigen::Matrix <double, STATE_DIM, 1> setpoint) {
+    this->setpoint = setpoint;
+}
