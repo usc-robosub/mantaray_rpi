@@ -1,4 +1,4 @@
-# mantaray_rpi
+# mantaray_rpi (OUTDATED DON'T USE!!!)
 ROS package that handles control on the Raspberry Pi.
 
 ## Installation
